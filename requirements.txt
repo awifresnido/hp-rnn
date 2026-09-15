@@ -1,0 +1,15 @@
+# Harry Potter RNN — project dependencies
+#
+# Torch comes from the CUDA wheel index used on the DGX (driver CUDA 13.0,
+# A100-SXM4-40GB). On CPU-only machines install plain `torch` instead.
+#
+#   python -m pip install --index-url https://download.pytorch.org/whl/cu130 torch
+#   python -m pip install -r requirements.txt
+#
+torch>=2.4
+numpy>=1.26
+EbookLib>=0.18
+beautifulsoup4>=4.12
+lxml>=5.0
+pytest>=8.0
+ruff>=0.6

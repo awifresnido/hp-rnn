@@ -1,0 +1,26 @@
+# Copyrighted source data and derived corpora
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Trained artifacts and experiment outputs
+checkpoints/*
+!checkpoints/.gitkeep
+results/*
+!results/.gitkeep
+logs/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

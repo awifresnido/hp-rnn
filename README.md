@@ -126,4 +126,3 @@ These commands define the intended interface. Implementation proceeds in tested 
 ## Scope limitations
 
 This is a word-level educational model, not a modern production language model. `<UNK>` collapses rare words, a 64-token context is short, and generated prose may memorize fragments. Do not publish the source corpus or long generated passages.
-# hp-rnn
