@@ -11,7 +11,7 @@ import json
 import re
 import unicodedata
 from collections import Counter
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -97,15 +97,29 @@ def clean_text(raw: str) -> str:
     return joined.strip()
 
 
-def extract_epub_text(epub_path: Path) -> str:
-    """Extract the readable text of an EPUB in spine (reading) order."""
+#: Opening-chapter titles of the seven books, in series order. The omnibus EPUB
+#: stores chapters, not books, so these are what mark a new book. Titles are
+#: factual metadata; they carry no book text.
+BOOK_OPENING_CHAPTERS = (
+    "THE BOY WHO LIVED",
+    "THE WORST BIRTHDAY",
+    "OWL POST",
+    "THE RIDDLE HOUSE",
+    "DUDLEY DEMENTED",
+    "THE OTHER MINISTER",
+    "THE DARK LORD ASCENDING",
+)
+
+
+def extract_epub_chapters(epub_path: Path) -> list[tuple[str, str]]:
+    """Return ``(heading, text)`` for every content document, in spine order."""
     import warnings
 
     from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
     from ebooklib import ITEM_DOCUMENT, epub
 
     book = epub.read_epub(str(epub_path), options={"ignore_ncx": True})
-    chapters: list[str] = []
+    chapters: list[tuple[str, str]] = []
     for item_id, _linear in book.spine:
         item = book.get_item_with_id(item_id)
         if item is None or item.get_type() != ITEM_DOCUMENT:
@@ -120,10 +134,54 @@ def extract_epub_text(epub_path: Path) -> str:
             soup = BeautifulSoup(html, "lxml")
         for tag in soup(["script", "style", "nav"]):
             tag.decompose()
+        heading = ""
+        for name in ("h1", "h2", "h3"):
+            found = soup.find(name)
+            if found:
+                heading = found.get_text(" ", strip=True)
+                break
         text = soup.get_text(separator="\n")
         if text.strip():
-            chapters.append(text.strip())
-    return "\n\n".join(chapters)
+            chapters.append((heading, text.strip()))
+    return chapters
+
+
+def book_start_indices(chapters: Sequence[tuple[str, str]]) -> list[int]:
+    """Indices of chapters that open a book, in reading order."""
+    openings = {title.upper() for title in BOOK_OPENING_CHAPTERS}
+    return [index for index, (heading, _) in enumerate(chapters) if heading.upper() in openings]
+
+
+def extract_epub_books(epub_path: Path) -> list[str]:
+    """Return the cleaned text of each book in the omnibus, in reading order.
+
+    Front matter before the first recognised opening chapter (title page, table
+    of contents, copyright) is dropped, since it is not prose. When no opening
+    chapter is recognised the whole document is returned as a single book, which
+    keeps single-book EPUBs working.
+    """
+    chapters = extract_epub_chapters(epub_path)
+    if not chapters:
+        return []
+
+    starts = book_start_indices(chapters)
+    if not starts:
+        return [clean_text("\n\n".join(text for _heading, text in chapters))]
+
+    ends = starts[1:] + [len(chapters)]
+    return [
+        clean_text("\n\n".join(text for _heading, text in chapters[start:end]))
+        for start, end in zip(starts, ends)
+    ]
+
+
+def extract_epub_text(epub_path: Path) -> str:
+    """Extract the readable text of an EPUB in spine (reading) order.
+
+    This is the concatenation of :func:`extract_epub_books`, so the corpus and
+    the book-level split are always derived from exactly the same text.
+    """
+    return "\n\n".join(extract_epub_books(epub_path))
 
 
 # --- statistics ----------------------------------------------------------------
@@ -234,6 +292,41 @@ def split_token_ids(
     return list(ids[:train_end]), list(ids[train_end:val_end]), list(ids[val_end:])
 
 
+def book_token_counts(books: Sequence[str]) -> list[int]:
+    """Token count of each book, in reading order."""
+    return [len(tokenize(book)) for book in books]
+
+
+def split_token_ids_by_books(
+    ids: Sequence[int],
+    counts: Sequence[int],
+    train_books: int = 5,
+) -> dict[str, list[int]]:
+    """Split token IDs by whole books: first ``train_books`` train, then val, then test.
+
+    Boundaries land between books rather than mid-sentence, so test is a genuinely
+    held-out book instead of the tail of a document the model has partly seen.
+    """
+    if len(ids) != sum(counts):
+        raise ValueError(
+            f"token counts must sum to the number of token IDs "
+            f"({sum(counts):,} vs {len(ids):,})"
+        )
+    if len(counts) < train_books + 1:
+        raise ValueError(
+            f"book splitting requires at least {train_books + 1} books for a train "
+            f"and validation split, got {len(counts)}"
+        )
+
+    train_end = sum(counts[:train_books])
+    val_end = train_end + counts[train_books]
+    return {
+        "train": list(ids[:train_end]),
+        "val": list(ids[train_end:val_end]),
+        "test": list(ids[val_end:]),
+    }
+
+
 def make_sequence_tensors(
     ids: Sequence[int],
     sequence_length: int,
@@ -259,18 +352,16 @@ class LanguageModelDataset(Dataset):
         return self.inputs[index], self.targets[index]
 
 
-def build_dataloaders(
-    ids: Sequence[int],
+def build_split_dataloaders(
+    splits: Mapping[str, Sequence[int]],
     sequence_length: int,
     batch_size: int,
-    train_ratio: float = 0.8,
-    val_ratio: float = 0.1,
 ) -> dict[str, DataLoader]:
-    """Create train/validation/test loaders over one contiguous split."""
-    train_ids, val_ids, test_ids = split_token_ids(ids, train_ratio, val_ratio)
-    splits = {"train": train_ids, "val": val_ids, "test": test_ids}
+    """Create one loader per named split, skipping splits too short to window."""
     loaders: dict[str, DataLoader] = {}
     for name, split_ids in splits.items():
+        if len(split_ids) <= sequence_length:
+            continue
         loaders[name] = DataLoader(
             LanguageModelDataset(split_ids, sequence_length),
             batch_size=batch_size,
@@ -280,16 +371,35 @@ def build_dataloaders(
     return loaders
 
 
+def build_dataloaders(
+    ids: Sequence[int],
+    sequence_length: int,
+    batch_size: int,
+    train_ratio: float = 0.8,
+    val_ratio: float = 0.1,
+) -> dict[str, DataLoader]:
+    """Create train/validation/test loaders over one contiguous ratio split."""
+    train_ids, val_ids, test_ids = split_token_ids(ids, train_ratio, val_ratio)
+    return build_split_dataloaders(
+        {"train": train_ids, "val": val_ids, "test": test_ids},
+        sequence_length,
+        batch_size,
+    )
+
+
 # --- preparation ---------------------------------------------------------------
 
 
 def prepare_corpus(epub_path: Path, output_dir: Path) -> Path:
-    """Extract and clean an EPUB into ``output_dir/corpus.txt``."""
+    """Extract and clean an EPUB into ``output_dir/corpus.txt``.
+
+    Extraction already cleans each book, so the corpus is exactly the join of the
+    books that the book-level split operates on.
+    """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     corpus_path = output_dir / "corpus.txt"
-    cleaned = clean_text(extract_epub_text(Path(epub_path)))
-    corpus_path.write_text(cleaned + "\n", encoding="utf-8")
+    corpus_path.write_text(extract_epub_text(Path(epub_path)) + "\n", encoding="utf-8")
     return corpus_path
 
 
@@ -298,30 +408,69 @@ def prepare_dataset(
     output_dir: Path,
     vocab_size: int | None,
     sequence_length: int,
-) -> dict[str, object]:
-    """Full Stage 2-4 preparation: corpus, vocabulary, and token IDs."""
+    split_by: str = "ratio",
+    train_books: int = 5,
+    train_ratio: float = 0.8,
+    val_ratio: float = 0.1,
+) -> PreparedDataset:
+    """Full Stage 2-4 preparation: corpus, vocabulary, token IDs, and splits."""
+    if split_by not in ("ratio", "book"):
+        raise ValueError(f"split_by must be 'ratio' or 'book', got {split_by!r}")
+
     output_dir = Path(output_dir)
-    corpus_path = prepare_corpus(epub_path, output_dir)
-    tokens = tokenize(corpus_path.read_text(encoding="utf-8"))
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    books = extract_epub_books(Path(epub_path))
+    corpus_text = "\n\n".join(books)
+    corpus_path = output_dir / "corpus.txt"
+    corpus_path.write_text(corpus_text + "\n", encoding="utf-8")
+
+    counts = book_token_counts(books)
+    tokens = tokenize(corpus_text)
     vocab = Vocabulary.build(tokens, max_size=vocab_size)
     vocab.save(output_dir / "vocab.json")
     ids = vocab.encode(tokens)
+
+    if split_by == "book":
+        splits = split_token_ids_by_books(ids, counts, train_books)
+    else:
+        train_ids, val_ids, test_ids = split_token_ids(ids, train_ratio, val_ratio)
+        splits = {"train": train_ids, "val": val_ids, "test": test_ids}
+
     torch.save(
         {
             "token_ids": torch.tensor(ids, dtype=torch.long),
+            "splits": splits,
+            "split_mode": split_by,
+            "book_token_counts": counts,
             "sequence_length": sequence_length,
             "vocab_size": vocab.size,
             "total_tokens": len(tokens),
         },
         output_dir / "token_ids.pt",
     )
-    return {
-        "corpus_path": corpus_path,
-        "tokens": tokens,
-        "vocab": vocab,
-        "ids": ids,
-        "stats": corpus_statistics(corpus_path.read_text(encoding="utf-8")),
-    }
+    return PreparedDataset(
+        corpus_path=corpus_path,
+        tokens=tokens,
+        vocab=vocab,
+        ids=ids,
+        splits=splits,
+        book_token_counts=counts,
+        stats=corpus_statistics(corpus_text),
+    )
+
+
+@dataclass(frozen=True)
+class PreparedDataset:
+    """Everything :func:`prepare_dataset` produced, ready to train on."""
+
+    corpus_path: Path
+    tokens: list[str]
+    vocab: Vocabulary
+    ids: list[int]
+    splits: dict[str, list[int]]
+    book_token_counts: list[int]
+    stats: CorpusStats
 
 
 def format_statistics(stats: CorpusStats, vocab_size: int, sequence_length: int) -> str:
@@ -347,6 +496,18 @@ def _build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--output-dir", type=Path, default=Path("data/processed"))
     prepare.add_argument("--vocab-size", type=int, default=18000)
     prepare.add_argument("--sequence-length", type=int, default=64)
+    prepare.add_argument(
+        "--split-by",
+        choices=("book", "ratio"),
+        default="book",
+        help="'book' holds out whole books (default); 'ratio' cuts the token stream 80/10/10",
+    )
+    prepare.add_argument(
+        "--train-books",
+        type=int,
+        default=5,
+        help="with --split-by book: books 1..N train, book N+1 validation, the rest test",
+    )
 
     inspect = sub.add_parser("inspect", help="print one shifted batch from the loaders")
     inspect.add_argument("--processed-dir", type=Path, default=Path("data/processed"))
@@ -360,10 +521,24 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.command == "prepare":
         result = prepare_dataset(
-            args.input, args.output_dir, args.vocab_size, args.sequence_length
+            args.input,
+            args.output_dir,
+            args.vocab_size,
+            args.sequence_length,
+            split_by=args.split_by,
+            train_books=args.train_books,
         )
-        print(format_statistics(result["stats"], result["vocab"].size, args.sequence_length))
-        print(f"\nwrote {result['corpus_path']}")
+        splits = result.splits
+        counts = result.book_token_counts
+        print(format_statistics(result.stats, result.vocab.size, args.sequence_length))
+        print(f"\nbooks detected   : {len(counts)}")
+        for index, count in enumerate(counts, start=1):
+            print(f"  book {index}: {count:,} tokens")
+        print(f"\nsplit mode       : {args.split_by}")
+        for name in ("train", "val", "test"):
+            size = len(splits[name])
+            print(f"  {name:<6} {size:>10,} tokens  ({size / max(1, len(result.ids)):.1%})")
+        print(f"\nwrote {result.corpus_path}")
         print(f"wrote {args.output_dir / 'vocab.json'}")
         print(f"wrote {args.output_dir / 'token_ids.pt'}")
         return 0

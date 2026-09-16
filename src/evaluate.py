@@ -19,7 +19,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
-from src.data import build_dataloaders
+from src.data import build_dataloaders, build_split_dataloaders
 from src.model import ModelConfig
 
 #: The three contiguous corpus sections produced by :mod:`src.data`.
@@ -92,12 +92,6 @@ def split_losses(
     return losses
 
 
-def load_token_ids(processed_dir: Path) -> tuple[list[int], int]:
-    """Read the prepared token IDs and sequence length from ``processed_dir``."""
-    payload = torch.load(Path(processed_dir) / "token_ids.pt", weights_only=False)
-    return payload["token_ids"].tolist(), int(payload["sequence_length"])
-
-
 def evaluate_checkpoint(
     checkpoint_path: Path,
     processed_dir: Path,
@@ -106,15 +100,18 @@ def evaluate_checkpoint(
     sequence_length: int | None = None,
 ) -> EvaluationReport:
     """Evaluate a saved checkpoint against the prepared corpus splits."""
-    from src.train import load_checkpoint, resolve_device
+    from src.train import load_checkpoint, load_processed, resolve_device
 
     checkpoint_path = Path(checkpoint_path)
     contents = load_checkpoint(checkpoint_path)
     target_device = resolve_device(device)
 
-    token_ids, stored_length = load_token_ids(processed_dir)
-    length = sequence_length or contents.sequence_length or stored_length
-    loaders = build_dataloaders(token_ids, length, batch_size)
+    processed = load_processed(processed_dir)
+    length = sequence_length or contents.sequence_length or processed.sequence_length
+    if processed.splits:
+        loaders = build_split_dataloaders(processed.splits, length, batch_size)
+    else:
+        loaders = build_dataloaders(processed.token_ids, length, batch_size)
 
     losses = split_losses(contents.model, loaders, device=target_device)
     return EvaluationReport(

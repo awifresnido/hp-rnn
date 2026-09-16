@@ -208,15 +208,37 @@ def overfit_one_batch(
     return history
 
 
-def load_processed(processed_dir: Path) -> tuple[list[int], int, int]:
-    """Read token IDs, sequence length, and vocabulary size from ``processed_dir``."""
+@dataclass
+class ProcessedData:
+    """Prepared corpus as training consumes it."""
+
+    token_ids: list[int]
+    sequence_length: int
+    vocab_size: int
+    splits: dict[str, list[int]] | None
+    split_mode: str
+
+
+def load_processed(processed_dir: Path) -> ProcessedData:
+    """Read token IDs, sequence length, vocabulary size, and any explicit splits."""
     processed_dir = Path(processed_dir)
     payload = torch.load(processed_dir / "token_ids.pt", weights_only=False)
     vocab_size = payload.get("vocab_size")
     if vocab_size is None:
         payload_vocab = json.loads((processed_dir / "vocab.json").read_text(encoding="utf-8"))
         vocab_size = len(payload_vocab["id_to_token"])
-    return payload["token_ids"].tolist(), int(payload["sequence_length"]), int(vocab_size)
+
+    raw_splits = payload.get("splits")
+    splits = (
+        {name: list(values) for name, values in raw_splits.items()} if raw_splits else None
+    )
+    return ProcessedData(
+        token_ids=payload["token_ids"].tolist(),
+        sequence_length=int(payload["sequence_length"]),
+        vocab_size=int(vocab_size),
+        splits=splits,
+        split_mode=str(payload.get("split_mode", "ratio")),
+    )
 
 
 def train_model(
@@ -229,15 +251,20 @@ def train_model(
     ``log`` is called with each :class:`EpochRecord` as that epoch finishes, so a
     long run reports progress instead of printing only at the very end.
     """
-    from src.data import build_dataloaders
+    from src.data import build_dataloaders, build_split_dataloaders
 
     set_seed(config.seed)
     device = resolve_device(config.device)
-    token_ids, stored_length, vocab_size = load_processed(config.processed_dir)
-    sequence_length = config.sequence_length or stored_length
-    loaders = build_dataloaders(token_ids, sequence_length, config.batch_size)
+    processed = load_processed(config.processed_dir)
+    sequence_length = config.sequence_length or processed.sequence_length
+    if processed.splits:
+        loaders = build_split_dataloaders(
+            processed.splits, sequence_length, config.batch_size
+        )
+    else:
+        loaders = build_dataloaders(processed.token_ids, sequence_length, config.batch_size)
 
-    model = RecurrentLanguageModel(config.model_config(vocab_size)).to(device)
+    model = RecurrentLanguageModel(config.model_config(processed.vocab_size)).to(device)
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay
     )
