@@ -8,8 +8,8 @@ import pytest
 import torch
 
 from src.data import (
-    build_split_dataloaders,
     book_token_counts,
+    build_split_dataloaders,
     extract_epub_books,
     extract_epub_text,
     prepare_dataset,
@@ -71,7 +71,7 @@ def test_book_split_keeps_books_out_of_each_others_splits(two_book_epub: Path) -
 
 
 def test_build_split_dataloaders_honours_explicit_splits() -> None:
-    splits = {"train": list(range(0, 60)), "val": list(range(100, 140)), "test": list(range(200, 240))}
+    splits = {"train": list(range(60)), "val": list(range(100, 140)), "test": list(range(200, 240))}
 
     loaders = build_split_dataloaders(splits, sequence_length=4, batch_size=8)
 

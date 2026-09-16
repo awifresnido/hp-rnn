@@ -1,0 +1,5328 @@
+{
+ "repo_root": "/opt/data/projects/harry-potter-rnn",
+ "modules": [
+  {
+   "module": "src.compare",
+   "path": "src/compare.py",
+   "doc": "Aggregate finished runs into the Stage 14 model comparison.",
+   "lines": 199,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "argparse",
+     "collections.abc.Iterable",
+     "collections.abc.Sequence",
+     "dataclasses.dataclass",
+     "dataclasses.replace",
+     "json",
+     "math",
+     "pathlib.Path"
+    ],
+    "third_party": [],
+    "internal": [
+     "src.evaluate.evaluate_checkpoint",
+     "src.train.load_checkpoint"
+    ]
+   },
+   "classes": [
+    "RunSummary"
+   ],
+   "functions": [
+    "history_path",
+    "discover_runs",
+    "load_run",
+    "format_table",
+    "to_markdown",
+    "_build_parser",
+    "main"
+   ]
+  },
+  {
+   "module": "src.data",
+   "path": "src/data.py",
+   "doc": "Corpus extraction, cleaning, tokenization, vocabulary, and sequence datasets.",
+   "lines": 567,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "argparse",
+     "collections.Counter",
+     "collections.abc.Iterable",
+     "collections.abc.Mapping",
+     "collections.abc.Sequence",
+     "dataclasses.dataclass",
+     "dataclasses.field",
+     "json",
+     "pathlib.Path",
+     "re",
+     "unicodedata",
+     "warnings"
+    ],
+    "third_party": [
+     "bs4.BeautifulSoup",
+     "bs4.XMLParsedAsHTMLWarning",
+     "ebooklib.ITEM_DOCUMENT",
+     "ebooklib.epub",
+     "torch",
+     "torch.utils.data.DataLoader",
+     "torch.utils.data.Dataset"
+    ],
+    "internal": []
+   },
+   "classes": [
+    "CorpusStats",
+    "Vocabulary",
+    "LanguageModelDataset",
+    "PreparedDataset"
+   ],
+   "functions": [
+    "tokenize",
+    "strip_boilerplate",
+    "clean_text",
+    "extract_epub_chapters",
+    "book_start_indices",
+    "extract_epub_books",
+    "extract_epub_text",
+    "corpus_statistics",
+    "split_token_ids",
+    "book_token_counts",
+    "split_token_ids_by_books",
+    "make_sequence_tensors",
+    "build_split_dataloaders",
+    "build_dataloaders",
+    "prepare_corpus",
+    "prepare_dataset",
+    "format_statistics",
+    "_build_parser",
+    "main"
+   ]
+  },
+  {
+   "module": "src.evaluate",
+   "path": "src/evaluate.py",
+   "doc": "Independent evaluation: split losses and perplexity from a saved checkpoint.",
+   "lines": 153,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "argparse",
+     "collections.abc.Mapping",
+     "collections.abc.Sequence",
+     "dataclasses.dataclass",
+     "math",
+     "pathlib.Path"
+    ],
+    "third_party": [
+     "torch",
+     "torch.nn",
+     "torch.utils.data.DataLoader"
+    ],
+    "internal": [
+     "src.data.build_dataloaders",
+     "src.data.build_split_dataloaders",
+     "src.model.ModelConfig",
+     "src.train.load_checkpoint",
+     "src.train.load_processed",
+     "src.train.resolve_device"
+    ]
+   },
+   "classes": [
+    "EvaluationReport"
+   ],
+   "functions": [
+    "sequence_cross_entropy",
+    "perplexity_from_loss",
+    "split_losses",
+    "evaluate_checkpoint",
+    "_build_parser",
+    "main"
+   ]
+  },
+  {
+   "module": "src.generate",
+   "path": "src/generate.py",
+   "doc": "Next-word prediction and recursive text generation.",
+   "lines": 266,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "argparse",
+     "collections.abc.Sequence",
+     "dataclasses.dataclass",
+     "pathlib.Path"
+    ],
+    "third_party": [
+     "torch"
+    ],
+    "internal": [
+     "src.data.Vocabulary",
+     "src.data.tokenize",
+     "src.model.RecurrentLanguageModel",
+     "src.train.load_checkpoint",
+     "src.train.resolve_device"
+    ]
+   },
+   "classes": [
+    "Prediction"
+   ],
+   "functions": [
+    "tokenize_prompt",
+    "check_vocab_matches_model",
+    "next_word_predictions",
+    "sample_next_token",
+    "generate_tokens",
+    "generate",
+    "join_tokens",
+    "format_predictions",
+    "build_parser",
+    "main"
+   ]
+  },
+  {
+   "module": "src.model",
+   "path": "src/model.py",
+   "doc": "The recurrent language model: embedding -> recurrent cell -> vocabulary logits.",
+   "lines": 88,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "dataclasses.asdict",
+     "dataclasses.dataclass"
+    ],
+    "third_party": [
+     "torch",
+     "torch.nn"
+    ],
+    "internal": []
+   },
+   "classes": [
+    "ModelConfig",
+    "RecurrentLanguageModel"
+   ],
+   "functions": []
+  },
+  {
+   "module": "src.train",
+   "path": "src/train.py",
+   "doc": "Training: the one-batch diagnostic, gradient clipping, and the training loop.",
+   "lines": 435,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "argparse",
+     "collections.abc.Callable",
+     "collections.abc.Sequence",
+     "dataclasses.asdict",
+     "dataclasses.dataclass",
+     "dataclasses.field",
+     "json",
+     "pathlib.Path",
+     "random",
+     "time"
+    ],
+    "third_party": [
+     "torch",
+     "torch.nn"
+    ],
+    "internal": [
+     "src.data.build_dataloaders",
+     "src.data.build_split_dataloaders",
+     "src.evaluate.sequence_cross_entropy",
+     "src.evaluate.split_losses",
+     "src.model.CELL_TYPES",
+     "src.model.ModelConfig",
+     "src.model.RecurrentLanguageModel"
+    ]
+   },
+   "classes": [
+    "TrainConfig",
+    "EpochRecord",
+    "TrainResult",
+    "CheckpointContents",
+    "ProcessedData"
+   ],
+   "functions": [
+    "resolve_device",
+    "clip_gradients_",
+    "set_seed",
+    "save_checkpoint",
+    "load_checkpoint",
+    "overfit_one_batch",
+    "load_processed",
+    "train_model",
+    "format_history",
+    "_build_parser",
+    "main"
+   ]
+  },
+  {
+   "module": "tests.conftest",
+   "path": "tests/conftest.py",
+   "doc": "Shared fixtures: a tiny synthetic EPUB so tests never touch real book text.",
+   "lines": 148,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "pathlib.Path",
+     "zipfile"
+    ],
+    "third_party": [
+     "pytest"
+    ],
+    "internal": []
+   },
+   "classes": [],
+   "functions": [
+    "write_epub",
+    "fixture_epub",
+    "_chapter",
+    "write_two_book_epub",
+    "two_book_epub",
+    "fixture_tokens"
+   ]
+  },
+  {
+   "module": "tests.test_compare",
+   "path": "tests/test_compare.py",
+   "doc": "Stage 14 tests: aggregating runs into the model comparison table.",
+   "lines": 147,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "json",
+     "math"
+    ],
+    "third_party": [],
+    "internal": [
+     "src.compare.RunSummary",
+     "src.compare.format_table",
+     "src.compare.load_run",
+     "src.model.ModelConfig",
+     "src.model.RecurrentLanguageModel",
+     "src.train.save_checkpoint"
+    ]
+   },
+   "classes": [],
+   "functions": [
+    "write_run",
+    "test_load_run_reads_metrics_from_history_and_checkpoint",
+    "test_val_perplexity_is_exp_of_best_val_loss",
+    "test_table_lists_every_run_in_the_requested_order",
+    "test_unevaluated_test_perplexity_is_shown_as_pending",
+    "test_missing_metrics_render_as_not_available",
+    "test_empty_run_list_produces_a_header_only_table",
+    "test_missing_history_file_is_reported_clearly"
+   ]
+  },
+  {
+   "module": "tests.test_corpus",
+   "path": "tests/test_corpus.py",
+   "doc": "Stage 2 tests: EPUB extraction, basic cleaning, and corpus statistics.",
+   "lines": 63,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "pathlib.Path"
+    ],
+    "third_party": [],
+    "internal": [
+     "src.data.clean_text",
+     "src.data.corpus_statistics",
+     "src.data.extract_epub_text",
+     "src.data.prepare_corpus"
+    ]
+   },
+   "classes": [],
+   "functions": [
+    "test_extract_epub_text_follows_spine_order",
+    "test_extract_epub_text_drops_markup_and_navigation",
+    "test_clean_text_normalizes_typographic_quotes",
+    "test_clean_text_joins_line_break_hyphenation",
+    "test_clean_text_drops_page_numbers_and_artifact_lines",
+    "test_clean_text_collapses_excess_whitespace",
+    "test_corpus_statistics_counts_characters_words_and_uniques",
+    "test_prepare_corpus_writes_processed_files"
+   ]
+  },
+  {
+   "module": "tests.test_dataset",
+   "path": "tests/test_dataset.py",
+   "doc": "Stage 4 tests: contiguous splits, shifted sequences, and batching.",
+   "lines": 65,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations"
+    ],
+    "third_party": [
+     "torch"
+    ],
+    "internal": [
+     "src.data.LanguageModelDataset",
+     "src.data.build_dataloaders",
+     "src.data.make_sequence_tensors",
+     "src.data.split_token_ids"
+    ]
+   },
+   "classes": [],
+   "functions": [
+    "test_split_token_ids_is_contiguous_and_covers_everything",
+    "test_make_sequence_tensors_shift_target_by_one",
+    "test_dataset_length_matches_available_windows",
+    "test_dataset_windows_are_non_overlapping_blocks_of_positions",
+    "test_build_dataloaders_shapes_and_alignment",
+    "test_build_dataloaders_train_split_is_contiguous_prefix"
+   ]
+  },
+  {
+   "module": "tests.test_depgraph",
+   "path": "tests/test_depgraph.py",
+   "doc": "Tests for the dependency-graph resolver.",
+   "lines": 99,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "pathlib.Path",
+     "sys"
+    ],
+    "third_party": [
+     "depgraph.Function",
+     "depgraph.resolve_target",
+     "pytest"
+    ],
+    "internal": []
+   },
+   "classes": [],
+   "functions": [
+    "make",
+    "index",
+    "test_calls_on_lowercase_variables_never_resolve",
+    "test_bare_name_resolves_within_the_same_module",
+    "test_bare_name_resolves_through_an_internal_import",
+    "test_bare_name_does_not_cross_into_an_unimported_module",
+    "test_self_method_resolves_to_the_owning_class",
+    "test_class_method_resolves_across_modules"
+   ]
+  },
+  {
+   "module": "tests.test_evaluate",
+   "path": "tests/test_evaluate.py",
+   "doc": "Stage 7 tests: independent evaluation, loss, and perplexity.",
+   "lines": 87,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "math"
+    ],
+    "third_party": [
+     "pytest",
+     "torch"
+    ],
+    "internal": [
+     "src.data.build_dataloaders",
+     "src.evaluate.evaluate_checkpoint",
+     "src.evaluate.perplexity_from_loss",
+     "src.evaluate.sequence_cross_entropy",
+     "src.evaluate.split_losses",
+     "src.model.ModelConfig",
+     "src.model.RecurrentLanguageModel",
+     "src.train.save_checkpoint"
+    ]
+   },
+   "classes": [],
+   "functions": [
+    "test_perplexity_is_the_exponential_of_cross_entropy",
+    "test_sequence_cross_entropy_matches_manual_flattened_computation",
+    "test_split_losses_reports_a_loss_for_every_split",
+    "test_evaluate_checkpoint_works_without_any_training"
+   ]
+  },
+  {
+   "module": "tests.test_generation",
+   "path": "tests/test_generation.py",
+   "doc": "Stages 8-9 tests: next-word probabilities, greedy, temperature, and top-k.",
+   "lines": 165,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "math"
+    ],
+    "third_party": [
+     "pytest",
+     "torch"
+    ],
+    "internal": [
+     "src.data.Vocabulary",
+     "src.generate.Prediction",
+     "src.generate.generate",
+     "src.generate.generate_tokens",
+     "src.generate.next_word_predictions",
+     "src.generate.sample_next_token",
+     "src.generate.tokenize_prompt",
+     "src.model.ModelConfig",
+     "src.model.RecurrentLanguageModel"
+    ]
+   },
+   "classes": [],
+   "functions": [
+    "vocab",
+    "model",
+    "test_tokenize_prompt_reuses_the_corpus_tokenizer",
+    "test_predictions_are_ranked_and_sum_to_at_most_one",
+    "test_top_n_is_capped_by_vocabulary_size",
+    "test_greedy_selection_picks_the_highest_logit",
+    "test_top_k_of_one_equals_greedy",
+    "test_zero_temperature_falls_back_to_greedy",
+    "test_generation_is_reproducible_with_a_seed",
+    "test_generation_produces_the_requested_number_of_words",
+    "test_rendered_generation_keeps_the_prompt_intact",
+    "test_only_the_last_context_tokens_influence_generation",
+    "test_temperature_affects_the_sampling_distribution",
+    "test_mismatched_vocabulary_and_model_are_rejected",
+    "test_prediction_probabilities_are_finite"
+   ]
+  },
+  {
+   "module": "tests.test_model",
+   "path": "tests/test_model.py",
+   "doc": "Stage 5 tests: recurrent language model shapes, gradients, and configuration.",
+   "lines": 95,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations"
+    ],
+    "third_party": [
+     "pytest",
+     "torch"
+    ],
+    "internal": [
+     "src.model.CELL_TYPES",
+     "src.model.ModelConfig",
+     "src.model.RecurrentLanguageModel"
+    ]
+   },
+   "classes": [],
+   "functions": [
+    "build_model",
+    "sample_inputs",
+    "test_model_maps_batch_and_time_to_vocabulary_logits",
+    "test_backward_produces_gradients_for_every_parameter",
+    "test_parameter_count_is_positive",
+    "test_parameter_count_grows_with_hidden_size",
+    "test_dropout_keeps_output_shape_valid",
+    "test_eval_mode_is_deterministic",
+    "test_config_round_trips_through_dict",
+    "test_unknown_cell_type_is_rejected"
+   ]
+  },
+  {
+   "module": "tests.test_split",
+   "path": "tests/test_split.py",
+   "doc": "Book-level splitting: split on whole books rather than a ratio of tokens.",
+   "lines": 107,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "pathlib.Path"
+    ],
+    "third_party": [
+     "pytest",
+     "torch"
+    ],
+    "internal": [
+     "src.data.book_token_counts",
+     "src.data.build_split_dataloaders",
+     "src.data.extract_epub_books",
+     "src.data.extract_epub_text",
+     "src.data.prepare_dataset",
+     "src.data.split_token_ids_by_books",
+     "src.data.tokenize"
+    ]
+   },
+   "classes": [],
+   "functions": [
+    "test_extract_epub_books_groups_chapters_by_book_opening",
+    "test_book_token_counts_sum_to_the_whole_corpus",
+    "test_split_token_ids_by_books_takes_whole_books_contiguously",
+    "test_split_token_ids_by_books_rejects_a_count_mismatch",
+    "test_split_token_ids_by_books_rejects_impossible_book_counts",
+    "test_book_split_keeps_books_out_of_each_others_splits",
+    "test_build_split_dataloaders_honours_explicit_splits",
+    "test_prepare_dataset_book_mode_records_the_splits",
+    "test_prepare_dataset_ratio_mode_remains_the_default"
+   ]
+  },
+  {
+   "module": "tests.test_tokenizer",
+   "path": "tests/test_tokenizer.py",
+   "doc": "Stage 3 tests: word-level tokenization, vocabulary, and ID round-trip.",
+   "lines": 76,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations"
+    ],
+    "third_party": [],
+    "internal": [
+     "src.data.Vocabulary",
+     "src.data.tokenize"
+    ]
+   },
+   "classes": [],
+   "functions": [
+    "test_tokenize_separates_words_and_punctuation",
+    "test_tokenize_keeps_contractions_and_capitalization",
+    "test_tokenize_handles_multicharacter_punctuation",
+    "test_vocabulary_reserves_pad_and_unk_ids",
+    "test_vocabulary_orders_by_frequency_then_first_appearance",
+    "test_vocabulary_respects_max_size_and_maps_rare_words_to_unk",
+    "test_encode_decode_round_trip",
+    "test_vocabulary_save_and_load_round_trip"
+   ]
+  },
+  {
+   "module": "tests.test_training",
+   "path": "tests/test_training.py",
+   "doc": "Stage 6 tests: one-batch overfit, gradient clipping, and checkpoint round-trip.",
+   "lines": 213,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations"
+    ],
+    "third_party": [
+     "torch"
+    ],
+    "internal": [
+     "src.model.ModelConfig",
+     "src.model.RecurrentLanguageModel",
+     "src.train.TrainConfig",
+     "src.train.clip_gradients_",
+     "src.train.load_checkpoint",
+     "src.train.overfit_one_batch",
+     "src.train.save_checkpoint",
+     "src.train.train_model"
+    ]
+   },
+   "classes": [],
+   "functions": [
+    "tiny_model",
+    "tiny_batch",
+    "test_overfit_one_batch_reduces_loss_substantially",
+    "test_overfit_one_batch_is_reproducible_with_a_seed",
+    "test_clip_gradients_bounds_the_total_norm",
+    "test_checkpoint_round_trip_reproduces_predictions",
+    "test_checkpoint_records_metadata_for_standalone_evaluation",
+    "write_processed",
+    "small_config",
+    "test_train_model_reports_each_epoch_as_it_finishes",
+    "test_training_continues_when_no_log_callback_is_given",
+    "test_train_model_saves_best_checkpoint_and_tracks_history"
+   ]
+  },
+  {
+   "module": "scripts.check_diagram",
+   "path": "scripts/check_diagram.py",
+   "doc": "Sanity-check the generated dependency-graph page.",
+   "lines": 54,
+   "imports": {
+    "stdlib": [
+     "collections.Counter",
+     "html.parser.HTMLParser",
+     "pathlib.Path",
+     "re"
+    ],
+    "third_party": [],
+    "internal": []
+   },
+   "classes": [
+    "Checker"
+   ],
+   "functions": []
+  },
+  {
+   "module": "scripts.render_architecture",
+   "path": "scripts/render_architecture.py",
+   "doc": "Render docs/architecture.md and docs/dependency-graph.html from the parsed graph.",
+   "lines": 568,
+   "imports": {
+    "stdlib": [
+     "__future__.annotations",
+     "html",
+     "json",
+     "pathlib.Path"
+    ],
+    "third_party": [],
+    "internal": []
+   },
+   "classes": [],
+   "functions": [
+    "load_graph",
+    "symbol_index",
+    "verify_layers",
+    "module_of",
+    "layer_nodes",
+    "graph_edges",
+    "library_users",
+    "render_markdown",
+    "_wrap",
+    "_node_width",
+    "render_svg",
+    "render_html",
+    "main"
+   ]
+  }
+ ],
+ "classes": [
+  {
+   "module": "src.compare",
+   "name": "RunSummary",
+   "bases": [],
+   "lineno": 28,
+   "decorators": [
+    "dataclass"
+   ],
+   "methods": [
+    "sort_key"
+   ],
+   "doc": "One row of the comparison table."
+  },
+  {
+   "module": "src.data",
+   "name": "CorpusStats",
+   "bases": [],
+   "lineno": 191,
+   "decorators": [
+    "dataclass"
+   ],
+   "methods": [],
+   "doc": "Word-level statistics of a cleaned corpus."
+  },
+  {
+   "module": "src.data",
+   "name": "Vocabulary",
+   "bases": [],
+   "lineno": 216,
+   "decorators": [
+    "dataclass"
+   ],
+   "methods": [
+    "build",
+    "__len__",
+    "size",
+    "encode",
+    "decode",
+    "save",
+    "load"
+   ],
+   "doc": "A word-level vocabulary with reserved ``<PAD>`` and ``<UNK>`` entries."
+  },
+  {
+   "module": "src.data",
+   "name": "LanguageModelDataset",
+   "bases": [
+    "Dataset"
+   ],
+   "lineno": 342,
+   "decorators": [],
+   "methods": [
+    "__init__",
+    "__len__",
+    "__getitem__"
+   ],
+   "doc": "Sliding windows where the target is the input shifted by one token."
+  },
+  {
+   "module": "src.data",
+   "name": "PreparedDataset",
+   "bases": [],
+   "lineno": 464,
+   "decorators": [
+    "dataclass"
+   ],
+   "methods": [],
+   "doc": "Everything :func:`prepare_dataset` produced, ready to train on."
+  },
+  {
+   "module": "src.evaluate",
+   "name": "EvaluationReport",
+   "bases": [],
+   "lineno": 42,
+   "decorators": [
+    "dataclass"
+   ],
+   "methods": [
+    "table"
+   ],
+   "doc": "Loss, perplexity, and model size for one checkpoint."
+  },
+  {
+   "module": "src.generate",
+   "name": "Prediction",
+   "bases": [],
+   "lineno": 25,
+   "decorators": [
+    "dataclass"
+   ],
+   "methods": [],
+   "doc": "One candidate next word and its probability."
+  },
+  {
+   "module": "src.model",
+   "name": "ModelConfig",
+   "bases": [],
+   "lineno": 22,
+   "decorators": [
+    "dataclass"
+   ],
+   "methods": [
+    "__post_init__",
+    "to_dict",
+    "from_dict"
+   ],
+   "doc": "Architecture settings for :class:`RecurrentLanguageModel`."
+  },
+  {
+   "module": "src.model",
+   "name": "RecurrentLanguageModel",
+   "bases": [
+    "nn.Module"
+   ],
+   "lineno": 52,
+   "decorators": [],
+   "methods": [
+    "__init__",
+    "forward",
+    "num_parameters"
+   ],
+   "doc": "Word-level language model: ``[B, T]`` token IDs -> ``[B, T, V]`` logits."
+  },
+  {
+   "module": "src.train",
+   "name": "TrainConfig",
+   "bases": [],
+   "lineno": 38,
+   "decorators": [
+    "dataclass"
+   ],
+   "methods": [
+    "model_config",
+    "to_dict"
+   ],
+   "doc": "Everything that affects a training run, so runs stay comparable."
+  },
+  {
+   "module": "src.train",
+   "name": "EpochRecord",
+   "bases": [],
+   "lineno": 77,
+   "decorators": [
+    "dataclass"
+   ],
+   "methods": [],
+   "doc": "One row of the training history."
+  },
+  {
+   "module": "src.train",
+   "name": "TrainResult",
+   "bases": [],
+   "lineno": 87,
+   "decorators": [
+    "dataclass"
+   ],
+   "methods": [],
+   "doc": "Outcome of :func:`train_model`."
+  },
+  {
+   "module": "src.train",
+   "name": "CheckpointContents",
+   "bases": [],
+   "lineno": 97,
+   "decorators": [
+    "dataclass"
+   ],
+   "methods": [],
+   "doc": "A checkpoint loaded back into a usable model plus its metadata."
+  },
+  {
+   "module": "src.train",
+   "name": "ProcessedData",
+   "bases": [],
+   "lineno": 212,
+   "decorators": [
+    "dataclass"
+   ],
+   "methods": [],
+   "doc": "Prepared corpus as training consumes it."
+  },
+  {
+   "module": "scripts.check_diagram",
+   "name": "Checker",
+   "bases": [
+    "HTMLParser"
+   ],
+   "lineno": 14,
+   "decorators": [],
+   "methods": [
+    "__init__",
+    "handle_starttag",
+    "handle_endtag"
+   ],
+   "doc": ""
+  }
+ ],
+ "functions": [
+  {
+   "module": "src.compare",
+   "name": "sort_key",
+   "qualname": "RunSummary.sort_key",
+   "kind": "method",
+   "owner": "RunSummary",
+   "lineno": 41,
+   "args": [
+    "self"
+   ],
+   "calls": [
+    "CELL_ORDER.index",
+    "len"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.compare",
+   "name": "history_path",
+   "qualname": "history_path",
+   "kind": "function",
+   "owner": null,
+   "lineno": 49,
+   "args": [
+    "run_name",
+    "results_dir"
+   ],
+   "calls": [
+    "Path"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.compare",
+   "name": "discover_runs",
+   "qualname": "discover_runs",
+   "kind": "function",
+   "owner": null,
+   "lineno": 53,
+   "args": [
+    "results_dir"
+   ],
+   "calls": [
+    "Path",
+    "glob",
+    "len",
+    "sorted"
+   ],
+   "doc": "Find finished runs, ordered by architecture then name."
+  },
+  {
+   "module": "src.compare",
+   "name": "load_run",
+   "qualname": "load_run",
+   "kind": "function",
+   "owner": null,
+   "lineno": 62,
+   "args": [
+    "run_name",
+    "results_dir",
+    "checkpoint_dir"
+   ],
+   "calls": [
+    "FileNotFoundError",
+    "Path",
+    "RunSummary",
+    "checkpoint.exists",
+    "float",
+    "history_path",
+    "json.loads",
+    "len",
+    "load_checkpoint",
+    "math.exp",
+    "min",
+    "model.num_parameters",
+    "path.exists",
+    "path.read_text",
+    "payload.get",
+    "record.get",
+    "round",
+    "str",
+    "sum",
+    "train_config.get"
+   ],
+   "doc": "Build one summary from a run's history JSON and best checkpoint."
+  },
+  {
+   "module": "src.compare",
+   "name": "format_table",
+   "qualname": "format_table",
+   "kind": "function",
+   "owner": null,
+   "lineno": 104,
+   "args": [
+    "summaries"
+   ],
+   "calls": [
+    "join",
+    "lines.append"
+   ],
+   "doc": "Render the comparison table; unevaluated test perplexity shows as pending."
+  },
+  {
+   "module": "src.compare",
+   "name": "to_markdown",
+   "qualname": "to_markdown",
+   "kind": "function",
+   "owner": null,
+   "lineno": 124,
+   "args": [
+    "summaries"
+   ],
+   "calls": [
+    "join",
+    "lines.append"
+   ],
+   "doc": "Render the same results as a markdown table for the README/report."
+  },
+  {
+   "module": "src.compare",
+   "name": "_build_parser",
+   "qualname": "_build_parser",
+   "kind": "function",
+   "owner": null,
+   "lineno": 143,
+   "args": [],
+   "calls": [
+    "Path",
+    "argparse.ArgumentParser",
+    "parser.add_argument"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.compare",
+   "name": "main",
+   "qualname": "main",
+   "kind": "function",
+   "owner": null,
+   "lineno": 160,
+   "args": [
+    "argv"
+   ],
+   "calls": [
+    "Path",
+    "_build_parser",
+    "args.markdown.parent.mkdir",
+    "args.markdown.write_text",
+    "discover_runs",
+    "evaluate_checkpoint",
+    "format_table",
+    "load_run",
+    "parse_args",
+    "print",
+    "replace",
+    "round",
+    "scored.append",
+    "sorted",
+    "to_markdown"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.data",
+   "name": "tokenize",
+   "qualname": "tokenize",
+   "kind": "function",
+   "owner": null,
+   "lineno": 53,
+   "args": [
+    "text"
+   ],
+   "calls": [
+    "CHARACTER_MAP.items",
+    "TOKEN_PATTERN.findall",
+    "normalized.replace"
+   ],
+   "doc": "Split text into word and punctuation tokens, preserving case."
+  },
+  {
+   "module": "src.data",
+   "name": "strip_boilerplate",
+   "qualname": "strip_boilerplate",
+   "kind": "function",
+   "owner": null,
+   "lineno": 64,
+   "args": [
+    "text"
+   ],
+   "calls": [
+    "GUTENBERG_END.search",
+    "GUTENBERG_START.search",
+    "end.start",
+    "start.end"
+   ],
+   "doc": "Keep only the text between Project Gutenberg START/END markers, if present."
+  },
+  {
+   "module": "src.data",
+   "name": "clean_text",
+   "qualname": "clean_text",
+   "kind": "function",
+   "owner": null,
+   "lineno": 75,
+   "args": [
+    "raw"
+   ],
+   "calls": [
+    "ARTIFACT_LINE.match",
+    "CHARACTER_MAP.items",
+    "LINEBREAK_HYPHEN.sub",
+    "join",
+    "joined.strip",
+    "kept.append",
+    "re.sub",
+    "replace",
+    "strip",
+    "strip_boilerplate",
+    "text.replace",
+    "text.split",
+    "unicodedata.normalize"
+   ],
+   "doc": "Apply only the basic cleaning a word-level corpus needs."
+  },
+  {
+   "module": "src.data",
+   "name": "extract_epub_chapters",
+   "qualname": "extract_epub_chapters",
+   "kind": "function",
+   "owner": null,
+   "lineno": 114,
+   "args": [
+    "epub_path"
+   ],
+   "calls": [
+    "BeautifulSoup",
+    "book.get_item_with_id",
+    "chapters.append",
+    "decode",
+    "epub.read_epub",
+    "found.get_text",
+    "item.get_content",
+    "item.get_type",
+    "soup",
+    "soup.find",
+    "soup.get_text",
+    "str",
+    "tag.decompose",
+    "text.strip",
+    "warnings.catch_warnings",
+    "warnings.filterwarnings"
+   ],
+   "doc": "Return ``(heading, text)`` for every content document, in spine order."
+  },
+  {
+   "module": "src.data",
+   "name": "book_start_indices",
+   "qualname": "book_start_indices",
+   "kind": "function",
+   "owner": null,
+   "lineno": 149,
+   "args": [
+    "chapters"
+   ],
+   "calls": [
+    "enumerate",
+    "heading.upper",
+    "title.upper"
+   ],
+   "doc": "Indices of chapters that open a book, in reading order."
+  },
+  {
+   "module": "src.data",
+   "name": "extract_epub_books",
+   "qualname": "extract_epub_books",
+   "kind": "function",
+   "owner": null,
+   "lineno": 155,
+   "args": [
+    "epub_path"
+   ],
+   "calls": [
+    "book_start_indices",
+    "clean_text",
+    "extract_epub_chapters",
+    "join",
+    "len",
+    "zip"
+   ],
+   "doc": "Return the cleaned text of each book in the omnibus, in reading order."
+  },
+  {
+   "module": "src.data",
+   "name": "extract_epub_text",
+   "qualname": "extract_epub_text",
+   "kind": "function",
+   "owner": null,
+   "lineno": 178,
+   "args": [
+    "epub_path"
+   ],
+   "calls": [
+    "extract_epub_books",
+    "join"
+   ],
+   "doc": "Extract the readable text of an EPUB in spine (reading) order."
+  },
+  {
+   "module": "src.data",
+   "name": "corpus_statistics",
+   "qualname": "corpus_statistics",
+   "kind": "function",
+   "owner": null,
+   "lineno": 200,
+   "args": [
+    "text",
+    "top_n"
+   ],
+   "calls": [
+    "CorpusStats",
+    "Counter",
+    "counts.most_common",
+    "len",
+    "tokenize"
+   ],
+   "doc": "Count characters, tokens, distinct tokens, and the most common tokens."
+  },
+  {
+   "module": "src.data",
+   "name": "build",
+   "qualname": "Vocabulary.build",
+   "kind": "classmethod",
+   "owner": "Vocabulary",
+   "lineno": 226,
+   "args": [
+    "cls",
+    "tokens",
+    "max_size"
+   ],
+   "calls": [
+    "Counter",
+    "cls",
+    "enumerate",
+    "first_seen.setdefault",
+    "id_to_token.append",
+    "len",
+    "sorted"
+   ],
+   "doc": "Build a vocabulary ordered by frequency, then by first appearance."
+  },
+  {
+   "module": "src.data",
+   "name": "__len__",
+   "qualname": "Vocabulary.__len__",
+   "kind": "method",
+   "owner": "Vocabulary",
+   "lineno": 245,
+   "args": [
+    "self"
+   ],
+   "calls": [
+    "len"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.data",
+   "name": "size",
+   "qualname": "Vocabulary.size",
+   "kind": "property",
+   "owner": "Vocabulary",
+   "lineno": 249,
+   "args": [
+    "self"
+   ],
+   "calls": [
+    "len"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.data",
+   "name": "encode",
+   "qualname": "Vocabulary.encode",
+   "kind": "method",
+   "owner": "Vocabulary",
+   "lineno": 252,
+   "args": [
+    "self",
+    "tokens"
+   ],
+   "calls": [
+    "self.token_to_id.get"
+   ],
+   "doc": "Map tokens to IDs, sending anything unseen to ``<UNK>``."
+  },
+  {
+   "module": "src.data",
+   "name": "decode",
+   "qualname": "Vocabulary.decode",
+   "kind": "method",
+   "owner": "Vocabulary",
+   "lineno": 256,
+   "args": [
+    "self",
+    "ids"
+   ],
+   "calls": [
+    "int"
+   ],
+   "doc": "Map IDs back to tokens."
+  },
+  {
+   "module": "src.data",
+   "name": "save",
+   "qualname": "Vocabulary.save",
+   "kind": "method",
+   "owner": "Vocabulary",
+   "lineno": 260,
+   "args": [
+    "self",
+    "path"
+   ],
+   "calls": [
+    "Path",
+    "json.dumps",
+    "path.parent.mkdir",
+    "path.write_text"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.data",
+   "name": "load",
+   "qualname": "Vocabulary.load",
+   "kind": "classmethod",
+   "owner": "Vocabulary",
+   "lineno": 273,
+   "args": [
+    "cls",
+    "path"
+   ],
+   "calls": [
+    "Path",
+    "cls",
+    "enumerate",
+    "json.loads",
+    "list",
+    "read_text"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.data",
+   "name": "split_token_ids",
+   "qualname": "split_token_ids",
+   "kind": "function",
+   "owner": null,
+   "lineno": 283,
+   "args": [
+    "ids",
+    "train_ratio",
+    "val_ratio"
+   ],
+   "calls": [
+    "int",
+    "len",
+    "list"
+   ],
+   "doc": "Split token IDs into contiguous train/validation/test sections."
+  },
+  {
+   "module": "src.data",
+   "name": "book_token_counts",
+   "qualname": "book_token_counts",
+   "kind": "function",
+   "owner": null,
+   "lineno": 295,
+   "args": [
+    "books"
+   ],
+   "calls": [
+    "len",
+    "tokenize"
+   ],
+   "doc": "Token count of each book, in reading order."
+  },
+  {
+   "module": "src.data",
+   "name": "split_token_ids_by_books",
+   "qualname": "split_token_ids_by_books",
+   "kind": "function",
+   "owner": null,
+   "lineno": 300,
+   "args": [
+    "ids",
+    "counts",
+    "train_books"
+   ],
+   "calls": [
+    "ValueError",
+    "len",
+    "list",
+    "sum"
+   ],
+   "doc": "Split token IDs by whole books: first ``train_books`` train, then val, then test."
+  },
+  {
+   "module": "src.data",
+   "name": "make_sequence_tensors",
+   "qualname": "make_sequence_tensors",
+   "kind": "function",
+   "owner": null,
+   "lineno": 330,
+   "args": [
+    "ids",
+    "sequence_length"
+   ],
+   "calls": [
+    "ValueError",
+    "contiguous",
+    "data.unfold",
+    "len",
+    "list",
+    "torch.tensor"
+   ],
+   "doc": "Build shifted ``(input, target)`` tensors of shape ``[N, sequence_length]``."
+  },
+  {
+   "module": "src.data",
+   "name": "__init__",
+   "qualname": "LanguageModelDataset.__init__",
+   "kind": "method",
+   "owner": "LanguageModelDataset",
+   "lineno": 345,
+   "args": [
+    "self",
+    "ids",
+    "sequence_length"
+   ],
+   "calls": [
+    "make_sequence_tensors"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.data",
+   "name": "__len__",
+   "qualname": "LanguageModelDataset.__len__",
+   "kind": "method",
+   "owner": "LanguageModelDataset",
+   "lineno": 348,
+   "args": [
+    "self"
+   ],
+   "calls": [],
+   "doc": ""
+  },
+  {
+   "module": "src.data",
+   "name": "__getitem__",
+   "qualname": "LanguageModelDataset.__getitem__",
+   "kind": "method",
+   "owner": "LanguageModelDataset",
+   "lineno": 351,
+   "args": [
+    "self",
+    "index"
+   ],
+   "calls": [],
+   "doc": ""
+  },
+  {
+   "module": "src.data",
+   "name": "build_split_dataloaders",
+   "qualname": "build_split_dataloaders",
+   "kind": "function",
+   "owner": null,
+   "lineno": 355,
+   "args": [
+    "splits",
+    "sequence_length",
+    "batch_size"
+   ],
+   "calls": [
+    "DataLoader",
+    "LanguageModelDataset",
+    "len",
+    "splits.items"
+   ],
+   "doc": "Create one loader per named split, skipping splits too short to window."
+  },
+  {
+   "module": "src.data",
+   "name": "build_dataloaders",
+   "qualname": "build_dataloaders",
+   "kind": "function",
+   "owner": null,
+   "lineno": 374,
+   "args": [
+    "ids",
+    "sequence_length",
+    "batch_size",
+    "train_ratio",
+    "val_ratio"
+   ],
+   "calls": [
+    "build_split_dataloaders",
+    "split_token_ids"
+   ],
+   "doc": "Create train/validation/test loaders over one contiguous ratio split."
+  },
+  {
+   "module": "src.data",
+   "name": "prepare_corpus",
+   "qualname": "prepare_corpus",
+   "kind": "function",
+   "owner": null,
+   "lineno": 393,
+   "args": [
+    "epub_path",
+    "output_dir"
+   ],
+   "calls": [
+    "Path",
+    "corpus_path.write_text",
+    "extract_epub_text",
+    "output_dir.mkdir"
+   ],
+   "doc": "Extract and clean an EPUB into ``output_dir/corpus.txt``."
+  },
+  {
+   "module": "src.data",
+   "name": "prepare_dataset",
+   "qualname": "prepare_dataset",
+   "kind": "function",
+   "owner": null,
+   "lineno": 406,
+   "args": [
+    "epub_path",
+    "output_dir",
+    "vocab_size",
+    "sequence_length",
+    "split_by",
+    "train_books",
+    "train_ratio",
+    "val_ratio"
+   ],
+   "calls": [
+    "Path",
+    "PreparedDataset",
+    "ValueError",
+    "Vocabulary.build",
+    "book_token_counts",
+    "corpus_path.write_text",
+    "corpus_statistics",
+    "extract_epub_books",
+    "join",
+    "len",
+    "output_dir.mkdir",
+    "split_token_ids",
+    "split_token_ids_by_books",
+    "tokenize",
+    "torch.save",
+    "torch.tensor",
+    "vocab.encode",
+    "vocab.save"
+   ],
+   "doc": "Full Stage 2-4 preparation: corpus, vocabulary, token IDs, and splits."
+  },
+  {
+   "module": "src.data",
+   "name": "format_statistics",
+   "qualname": "format_statistics",
+   "kind": "function",
+   "owner": null,
+   "lineno": 476,
+   "args": [
+    "stats",
+    "vocab_size",
+    "sequence_length"
+   ],
+   "calls": [
+    "join"
+   ],
+   "doc": "Render corpus statistics the way the project brief asks for them."
+  },
+  {
+   "module": "src.data",
+   "name": "_build_parser",
+   "qualname": "_build_parser",
+   "kind": "function",
+   "owner": null,
+   "lineno": 490,
+   "args": [],
+   "calls": [
+    "Path",
+    "argparse.ArgumentParser",
+    "inspect.add_argument",
+    "parser.add_subparsers",
+    "prepare.add_argument",
+    "sub.add_parser"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.data",
+   "name": "main",
+   "qualname": "main",
+   "kind": "function",
+   "owner": null,
+   "lineno": 519,
+   "args": [
+    "argv"
+   ],
+   "calls": [
+    "Vocabulary.load",
+    "_build_parser",
+    "bool",
+    "build_dataloaders",
+    "enumerate",
+    "format_statistics",
+    "int",
+    "iter",
+    "join",
+    "len",
+    "max",
+    "min",
+    "next",
+    "parse_args",
+    "prepare_dataset",
+    "print",
+    "range",
+    "tolist",
+    "torch.equal",
+    "torch.load",
+    "tuple",
+    "vocab.decode"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.evaluate",
+   "name": "sequence_cross_entropy",
+   "qualname": "sequence_cross_entropy",
+   "kind": "function",
+   "owner": null,
+   "lineno": 29,
+   "args": [
+    "logits",
+    "targets"
+   ],
+   "calls": [
+    "logits.reshape",
+    "logits.size",
+    "nn.functional.cross_entropy",
+    "targets.reshape"
+   ],
+   "doc": "Cross entropy over every predicted position in a ``[B, T, V]`` batch."
+  },
+  {
+   "module": "src.evaluate",
+   "name": "perplexity_from_loss",
+   "qualname": "perplexity_from_loss",
+   "kind": "function",
+   "owner": null,
+   "lineno": 36,
+   "args": [
+    "loss"
+   ],
+   "calls": [
+    "math.exp"
+   ],
+   "doc": "Convert a cross-entropy loss in nats into perplexity."
+  },
+  {
+   "module": "src.evaluate",
+   "name": "table",
+   "qualname": "EvaluationReport.table",
+   "kind": "method",
+   "owner": "EvaluationReport",
+   "lineno": 51,
+   "args": [
+    "self"
+   ],
+   "calls": [
+    "join",
+    "lines.append"
+   ],
+   "doc": "Render the report as the comparison table the project asks for."
+  },
+  {
+   "module": "src.evaluate",
+   "name": "split_losses",
+   "qualname": "split_losses",
+   "kind": "function",
+   "owner": null,
+   "lineno": 70,
+   "args": [
+    "model",
+    "loaders",
+    "device"
+   ],
+   "calls": [
+    "ValueError",
+    "eval",
+    "float",
+    "inputs.to",
+    "loaders.items",
+    "model",
+    "model.to",
+    "sequence_cross_entropy",
+    "targets.numel",
+    "targets.to",
+    "torch.device",
+    "torch.no_grad"
+   ],
+   "doc": "Average cross-entropy loss over each split, with the model in eval mode."
+  },
+  {
+   "module": "src.evaluate",
+   "name": "evaluate_checkpoint",
+   "qualname": "evaluate_checkpoint",
+   "kind": "function",
+   "owner": null,
+   "lineno": 95,
+   "args": [
+    "checkpoint_path",
+    "processed_dir",
+    "device",
+    "batch_size",
+    "sequence_length"
+   ],
+   "calls": [
+    "EvaluationReport",
+    "Path",
+    "build_dataloaders",
+    "build_split_dataloaders",
+    "contents.model.num_parameters",
+    "load_checkpoint",
+    "load_processed",
+    "losses.items",
+    "perplexity_from_loss",
+    "resolve_device",
+    "split_losses"
+   ],
+   "doc": "Evaluate a saved checkpoint against the prepared corpus splits."
+  },
+  {
+   "module": "src.evaluate",
+   "name": "_build_parser",
+   "qualname": "_build_parser",
+   "kind": "function",
+   "owner": null,
+   "lineno": 126,
+   "args": [],
+   "calls": [
+    "Path",
+    "argparse.ArgumentParser",
+    "parser.add_argument"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.evaluate",
+   "name": "main",
+   "qualname": "main",
+   "kind": "function",
+   "owner": null,
+   "lineno": 136,
+   "args": [
+    "argv"
+   ],
+   "calls": [
+    "_build_parser",
+    "evaluate_checkpoint",
+    "parse_args",
+    "print",
+    "report.table"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.generate",
+   "name": "tokenize_prompt",
+   "qualname": "tokenize_prompt",
+   "kind": "function",
+   "owner": null,
+   "lineno": 32,
+   "args": [
+    "vocab",
+    "prompt"
+   ],
+   "calls": [
+    "ValueError",
+    "tokenize",
+    "vocab.encode"
+   ],
+   "doc": "Tokenize a prompt with the corpus tokenizer and encode it to IDs."
+  },
+  {
+   "module": "src.generate",
+   "name": "check_vocab_matches_model",
+   "qualname": "check_vocab_matches_model",
+   "kind": "function",
+   "owner": null,
+   "lineno": 40,
+   "args": [
+    "vocab",
+    "model"
+   ],
+   "calls": [
+    "ValueError"
+   ],
+   "doc": "Fail clearly when a checkpoint's vocabulary size disagrees with the corpus."
+  },
+  {
+   "module": "src.generate",
+   "name": "next_word_predictions",
+   "qualname": "next_word_predictions",
+   "kind": "function",
+   "owner": null,
+   "lineno": 55,
+   "args": [
+    "model",
+    "vocab",
+    "prompt"
+   ],
+   "calls": [
+    "Prediction",
+    "check_vocab_matches_model",
+    "eval",
+    "float",
+    "indices.tolist",
+    "int",
+    "min",
+    "model",
+    "model.to",
+    "tokenize_prompt",
+    "torch.no_grad",
+    "torch.softmax",
+    "torch.tensor",
+    "torch.topk",
+    "values.tolist",
+    "zip"
+   ],
+   "doc": "Return the ``top_n`` most probable next words after ``prompt``."
+  },
+  {
+   "module": "src.generate",
+   "name": "sample_next_token",
+   "qualname": "sample_next_token",
+   "kind": "function",
+   "owner": null,
+   "lineno": 78,
+   "args": [
+    "logits"
+   ],
+   "calls": [
+    "logits.argmax",
+    "scaled.size",
+    "squeeze",
+    "torch.multinomial",
+    "torch.softmax",
+    "torch.topk",
+    "torch.where"
+   ],
+   "doc": "Choose the next token from ``logits`` of shape ``[1, V]``."
+  },
+  {
+   "module": "src.generate",
+   "name": "generate_tokens",
+   "qualname": "generate_tokens",
+   "kind": "function",
+   "owner": null,
+   "lineno": 104,
+   "args": [
+    "model",
+    "vocab",
+    "prompt"
+   ],
+   "calls": [
+    "ValueError",
+    "check_vocab_matches_model",
+    "eval",
+    "generated.append",
+    "ids.append",
+    "int",
+    "item",
+    "manual_seed",
+    "model",
+    "model.to",
+    "range",
+    "sample_next_token",
+    "to",
+    "tokenize_prompt",
+    "torch.Generator",
+    "torch.no_grad",
+    "torch.tensor",
+    "unsqueeze"
+   ],
+   "doc": "Generate ``words`` new words after ``prompt`` and return them as tokens."
+  },
+  {
+   "module": "src.generate",
+   "name": "generate",
+   "qualname": "generate",
+   "kind": "function",
+   "owner": null,
+   "lineno": 153,
+   "args": [
+    "model",
+    "vocab",
+    "prompt"
+   ],
+   "calls": [
+    "generate_tokens",
+    "join_tokens"
+   ],
+   "doc": "Generate ``words`` new words after ``prompt`` and render them as text."
+  },
+  {
+   "module": "src.generate",
+   "name": "join_tokens",
+   "qualname": "join_tokens",
+   "kind": "function",
+   "owner": null,
+   "lineno": 182,
+   "args": [
+    "prompt",
+    "generated"
+   ],
+   "calls": [
+    "prompt.rstrip",
+    "token.startswith"
+   ],
+   "doc": "Reattach generated words to the prompt without disturbing the prompt text."
+  },
+  {
+   "module": "src.generate",
+   "name": "format_predictions",
+   "qualname": "format_predictions",
+   "kind": "function",
+   "owner": null,
+   "lineno": 199,
+   "args": [
+    "predictions"
+   ],
+   "calls": [
+    "join",
+    "len",
+    "max"
+   ],
+   "doc": "Render predictions as a token/probability table."
+  },
+  {
+   "module": "src.generate",
+   "name": "build_parser",
+   "qualname": "build_parser",
+   "kind": "function",
+   "owner": null,
+   "lineno": 207,
+   "args": [],
+   "calls": [
+    "Path",
+    "argparse.ArgumentParser",
+    "parser.add_argument"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.generate",
+   "name": "main",
+   "qualname": "main",
+   "kind": "function",
+   "owner": null,
+   "lineno": 223,
+   "args": [
+    "argv"
+   ],
+   "calls": [
+    "Path",
+    "Vocabulary.load",
+    "build_parser",
+    "format_predictions",
+    "generate",
+    "len",
+    "load_checkpoint",
+    "next_word_predictions",
+    "parse_args",
+    "print",
+    "resolve_device"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.model",
+   "name": "__post_init__",
+   "qualname": "ModelConfig.__post_init__",
+   "kind": "method",
+   "owner": "ModelConfig",
+   "lineno": 33,
+   "args": [
+    "self"
+   ],
+   "calls": [
+    "ValueError"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.model",
+   "name": "to_dict",
+   "qualname": "ModelConfig.to_dict",
+   "kind": "method",
+   "owner": "ModelConfig",
+   "lineno": 43,
+   "args": [
+    "self"
+   ],
+   "calls": [
+    "asdict"
+   ],
+   "doc": "Serialise so checkpoints describe their own architecture."
+  },
+  {
+   "module": "src.model",
+   "name": "from_dict",
+   "qualname": "ModelConfig.from_dict",
+   "kind": "classmethod",
+   "owner": "ModelConfig",
+   "lineno": 48,
+   "args": [
+    "cls",
+    "payload"
+   ],
+   "calls": [
+    "cls"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.model",
+   "name": "__init__",
+   "qualname": "RecurrentLanguageModel.__init__",
+   "kind": "method",
+   "owner": "RecurrentLanguageModel",
+   "lineno": 55,
+   "args": [
+    "self",
+    "config"
+   ],
+   "calls": [
+    "__init__",
+    "nn.Dropout",
+    "nn.Embedding",
+    "nn.Linear",
+    "super"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.model",
+   "name": "forward",
+   "qualname": "RecurrentLanguageModel.forward",
+   "kind": "method",
+   "owner": "RecurrentLanguageModel",
+   "lineno": 75,
+   "args": [
+    "self",
+    "inputs"
+   ],
+   "calls": [
+    "self.embedding",
+    "self.head",
+    "self.output_dropout",
+    "self.recurrent"
+   ],
+   "doc": "Map a batch of token IDs to logits over the vocabulary at every step."
+  },
+  {
+   "module": "src.model",
+   "name": "num_parameters",
+   "qualname": "RecurrentLanguageModel.num_parameters",
+   "kind": "method",
+   "owner": "RecurrentLanguageModel",
+   "lineno": 86,
+   "args": [
+    "self"
+   ],
+   "calls": [
+    "p.numel",
+    "self.parameters",
+    "sum"
+   ],
+   "doc": "Count trainable parameters, for the final comparison table."
+  },
+  {
+   "module": "src.train",
+   "name": "resolve_device",
+   "qualname": "resolve_device",
+   "kind": "function",
+   "owner": null,
+   "lineno": 25,
+   "args": [
+    "requested"
+   ],
+   "calls": [
+    "RuntimeError",
+    "torch.cuda.is_available",
+    "torch.device"
+   ],
+   "doc": "Turn a device request into a device, refusing a silent CPU fallback."
+  },
+  {
+   "module": "src.train",
+   "name": "model_config",
+   "qualname": "TrainConfig.model_config",
+   "kind": "method",
+   "owner": "TrainConfig",
+   "lineno": 59,
+   "args": [
+    "self",
+    "vocab_size"
+   ],
+   "calls": [
+    "ModelConfig"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.train",
+   "name": "to_dict",
+   "qualname": "TrainConfig.to_dict",
+   "kind": "method",
+   "owner": "TrainConfig",
+   "lineno": 69,
+   "args": [
+    "self"
+   ],
+   "calls": [
+    "asdict",
+    "str"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.train",
+   "name": "clip_gradients_",
+   "qualname": "clip_gradients_",
+   "kind": "function",
+   "owner": null,
+   "lineno": 109,
+   "args": [
+    "model",
+    "max_norm"
+   ],
+   "calls": [
+    "ValueError",
+    "float",
+    "model.parameters",
+    "nn.utils.clip_grad_norm_"
+   ],
+   "doc": "Clip gradients in place and return the total norm measured beforehand."
+  },
+  {
+   "module": "src.train",
+   "name": "set_seed",
+   "qualname": "set_seed",
+   "kind": "function",
+   "owner": null,
+   "lineno": 119,
+   "args": [
+    "seed"
+   ],
+   "calls": [
+    "random.seed",
+    "torch.cuda.is_available",
+    "torch.cuda.manual_seed_all",
+    "torch.manual_seed"
+   ],
+   "doc": "Seed Python and torch so a run can be repeated."
+  },
+  {
+   "module": "src.train",
+   "name": "save_checkpoint",
+   "qualname": "save_checkpoint",
+   "kind": "function",
+   "owner": null,
+   "lineno": 127,
+   "args": [
+    "path"
+   ],
+   "calls": [
+    "Path",
+    "model.state_dict",
+    "model_config.to_dict",
+    "optimizer.state_dict",
+    "path.parent.mkdir",
+    "torch.save"
+   ],
+   "doc": "Write a self-describing checkpoint (architecture + progress in one file)."
+  },
+  {
+   "module": "src.train",
+   "name": "load_checkpoint",
+   "qualname": "load_checkpoint",
+   "kind": "function",
+   "owner": null,
+   "lineno": 158,
+   "args": [
+    "path",
+    "device"
+   ],
+   "calls": [
+    "CheckpointContents",
+    "ModelConfig.from_dict",
+    "Path",
+    "RecurrentLanguageModel",
+    "eval",
+    "float",
+    "int",
+    "model.load_state_dict",
+    "model.to",
+    "payload.get",
+    "str",
+    "torch.device",
+    "torch.load"
+   ],
+   "doc": "Rebuild a model from a checkpoint, evaluating on ``device``."
+  },
+  {
+   "module": "src.train",
+   "name": "overfit_one_batch",
+   "qualname": "overfit_one_batch",
+   "kind": "function",
+   "owner": null,
+   "lineno": 176,
+   "args": [
+    "model",
+    "inputs",
+    "targets"
+   ],
+   "calls": [
+    "clip_gradients_",
+    "history.append",
+    "inputs.to",
+    "item",
+    "loss.backward",
+    "loss.detach",
+    "model",
+    "model.parameters",
+    "model.to",
+    "optimizer.step",
+    "optimizer.zero_grad",
+    "range",
+    "sequence_cross_entropy",
+    "set_seed",
+    "targets.to",
+    "torch.device",
+    "torch.optim.AdamW",
+    "train"
+   ],
+   "doc": "Train repeatedly on one batch and return the loss after each step."
+  },
+  {
+   "module": "src.train",
+   "name": "load_processed",
+   "qualname": "load_processed",
+   "kind": "function",
+   "owner": null,
+   "lineno": 222,
+   "args": [
+    "processed_dir"
+   ],
+   "calls": [
+    "Path",
+    "ProcessedData",
+    "int",
+    "json.loads",
+    "len",
+    "list",
+    "payload.get",
+    "raw_splits.items",
+    "read_text",
+    "str",
+    "tolist",
+    "torch.load"
+   ],
+   "doc": "Read token IDs, sequence length, vocabulary size, and any explicit splits."
+  },
+  {
+   "module": "src.train",
+   "name": "train_model",
+   "qualname": "train_model",
+   "kind": "function",
+   "owner": null,
+   "lineno": 244,
+   "args": [
+    "config"
+   ],
+   "calls": [
+    "EpochRecord",
+    "Path",
+    "RecurrentLanguageModel",
+    "TrainResult",
+    "build_dataloaders",
+    "build_split_dataloaders",
+    "clip_gradients_",
+    "config.model_config",
+    "inputs.to",
+    "item",
+    "iter",
+    "load_processed",
+    "log",
+    "loss.backward",
+    "loss.detach",
+    "model",
+    "model.parameters",
+    "model.train",
+    "next",
+    "optimizer.step",
+    "optimizer.zero_grad",
+    "overfit_one_batch",
+    "range",
+    "resolve_device",
+    "result.history.append",
+    "save_checkpoint",
+    "sequence_cross_entropy",
+    "set_seed",
+    "split_losses",
+    "str",
+    "targets.numel",
+    "targets.to",
+    "time.perf_counter",
+    "to",
+    "torch.optim.AdamW"
+   ],
+   "doc": "Run the one-batch check (optionally) and train, keeping the best epoch."
+  },
+  {
+   "module": "src.train",
+   "name": "format_history",
+   "qualname": "format_history",
+   "kind": "function",
+   "owner": null,
+   "lineno": 333,
+   "args": [
+    "result"
+   ],
+   "calls": [
+    "join",
+    "lines.append"
+   ],
+   "doc": "Render the per-epoch table the training loop prints."
+  },
+  {
+   "module": "src.train",
+   "name": "_build_parser",
+   "qualname": "_build_parser",
+   "kind": "function",
+   "owner": null,
+   "lineno": 346,
+   "args": [],
+   "calls": [
+    "Path",
+    "argparse.ArgumentParser",
+    "parser.add_argument"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "src.train",
+   "name": "main",
+   "qualname": "main",
+   "kind": "function",
+   "owner": null,
+   "lineno": 373,
+   "args": [
+    "argv"
+   ],
+   "calls": [
+    "Path",
+    "TrainConfig",
+    "_build_parser",
+    "asdict",
+    "config.to_dict",
+    "format_history",
+    "history_path.parent.mkdir",
+    "history_path.write_text",
+    "json.dumps",
+    "parse_args",
+    "print",
+    "resolve_device",
+    "str",
+    "train_model"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.conftest",
+   "name": "write_epub",
+   "qualname": "write_epub",
+   "kind": "function",
+   "owner": null,
+   "lineno": 62,
+   "args": [
+    "path"
+   ],
+   "calls": [
+    "z.writestr",
+    "zipfile.ZipFile"
+   ],
+   "doc": "Write a minimal two-chapter EPUB in spine order."
+  },
+  {
+   "module": "tests.conftest",
+   "name": "fixture_epub",
+   "qualname": "fixture_epub",
+   "kind": "function",
+   "owner": null,
+   "lineno": 75,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "write_epub"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.conftest",
+   "name": "_chapter",
+   "qualname": "_chapter",
+   "kind": "function",
+   "owner": null,
+   "lineno": 86,
+   "args": [
+    "heading",
+    "body",
+    "title"
+   ],
+   "calls": [],
+   "doc": ""
+  },
+  {
+   "module": "tests.conftest",
+   "name": "write_two_book_epub",
+   "qualname": "write_two_book_epub",
+   "kind": "function",
+   "owner": null,
+   "lineno": 116,
+   "args": [
+    "path"
+   ],
+   "calls": [
+    "_chapter",
+    "z.writestr",
+    "zipfile.ZipFile"
+   ],
+   "doc": "Write an omnibus EPUB with two detectable books of two chapters each."
+  },
+  {
+   "module": "tests.conftest",
+   "name": "two_book_epub",
+   "qualname": "two_book_epub",
+   "kind": "function",
+   "owner": null,
+   "lineno": 142,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "write_two_book_epub"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.conftest",
+   "name": "fixture_tokens",
+   "qualname": "fixture_tokens",
+   "kind": "function",
+   "owner": null,
+   "lineno": 147,
+   "args": [],
+   "calls": [],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_compare",
+   "name": "write_run",
+   "qualname": "write_run",
+   "kind": "function",
+   "owner": null,
+   "lineno": 15,
+   "args": [
+    "results_dir",
+    "checkpoint_dir",
+    "run_name",
+    "cell"
+   ],
+   "calls": [
+    "ModelConfig",
+    "RecurrentLanguageModel",
+    "checkpoint_dir.mkdir",
+    "json.dumps",
+    "range",
+    "results_dir.mkdir",
+    "save_checkpoint",
+    "str",
+    "write_text"
+   ],
+   "doc": "Write the history JSON and best checkpoint that a finished run leaves behind."
+  },
+  {
+   "module": "tests.test_compare",
+   "name": "test_load_run_reads_metrics_from_history_and_checkpoint",
+   "qualname": "test_load_run_reads_metrics_from_history_and_checkpoint",
+   "kind": "function",
+   "owner": null,
+   "lineno": 64,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "isinstance",
+    "load_run",
+    "write_run"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_compare",
+   "name": "test_val_perplexity_is_exp_of_best_val_loss",
+   "qualname": "test_val_perplexity_is_exp_of_best_val_loss",
+   "kind": "function",
+   "owner": null,
+   "lineno": 81,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "load_run",
+    "math.exp",
+    "math.log",
+    "round",
+    "write_run"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_compare",
+   "name": "test_table_lists_every_run_in_the_requested_order",
+   "qualname": "test_table_lists_every_run_in_the_requested_order",
+   "kind": "function",
+   "owner": null,
+   "lineno": 91,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "format_table",
+    "load_run",
+    "table.index",
+    "write_run"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_compare",
+   "name": "test_unevaluated_test_perplexity_is_shown_as_pending",
+   "qualname": "test_unevaluated_test_perplexity_is_shown_as_pending",
+   "kind": "function",
+   "owner": null,
+   "lineno": 106,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "format_table",
+    "load_run",
+    "write_run"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_compare",
+   "name": "test_missing_metrics_render_as_not_available",
+   "qualname": "test_missing_metrics_render_as_not_available",
+   "kind": "function",
+   "owner": null,
+   "lineno": 116,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "RunSummary",
+    "format_table"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_compare",
+   "name": "test_empty_run_list_produces_a_header_only_table",
+   "qualname": "test_empty_run_list_produces_a_header_only_table",
+   "kind": "function",
+   "owner": null,
+   "lineno": 134,
+   "args": [],
+   "calls": [
+    "format_table",
+    "len",
+    "table.splitlines"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_compare",
+   "name": "test_missing_history_file_is_reported_clearly",
+   "qualname": "test_missing_history_file_is_reported_clearly",
+   "kind": "function",
+   "owner": null,
+   "lineno": 141,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "AssertionError",
+    "load_run",
+    "str"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_corpus",
+   "name": "test_extract_epub_text_follows_spine_order",
+   "qualname": "test_extract_epub_text_follows_spine_order",
+   "kind": "function",
+   "owner": null,
+   "lineno": 10,
+   "args": [
+    "fixture_epub"
+   ],
+   "calls": [
+    "extract_epub_text",
+    "text.index"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_corpus",
+   "name": "test_extract_epub_text_drops_markup_and_navigation",
+   "qualname": "test_extract_epub_text_drops_markup_and_navigation",
+   "kind": "function",
+   "owner": null,
+   "lineno": 19,
+   "args": [
+    "fixture_epub"
+   ],
+   "calls": [
+    "extract_epub_text"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_corpus",
+   "name": "test_clean_text_normalizes_typographic_quotes",
+   "qualname": "test_clean_text_normalizes_typographic_quotes",
+   "kind": "function",
+   "owner": null,
+   "lineno": 27,
+   "args": [],
+   "calls": [
+    "clean_text"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_corpus",
+   "name": "test_clean_text_joins_line_break_hyphenation",
+   "qualname": "test_clean_text_joins_line_break_hyphenation",
+   "kind": "function",
+   "owner": null,
+   "lineno": 33,
+   "args": [],
+   "calls": [
+    "clean_text"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_corpus",
+   "name": "test_clean_text_drops_page_numbers_and_artifact_lines",
+   "qualname": "test_clean_text_drops_page_numbers_and_artifact_lines",
+   "kind": "function",
+   "owner": null,
+   "lineno": 37,
+   "args": [],
+   "calls": [
+    "clean_text"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_corpus",
+   "name": "test_clean_text_collapses_excess_whitespace",
+   "qualname": "test_clean_text_collapses_excess_whitespace",
+   "kind": "function",
+   "owner": null,
+   "lineno": 43,
+   "args": [],
+   "calls": [
+    "clean_text"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_corpus",
+   "name": "test_corpus_statistics_counts_characters_words_and_uniques",
+   "qualname": "test_corpus_statistics_counts_characters_words_and_uniques",
+   "kind": "function",
+   "owner": null,
+   "lineno": 47,
+   "args": [],
+   "calls": [
+    "corpus_statistics"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_corpus",
+   "name": "test_prepare_corpus_writes_processed_files",
+   "qualname": "test_prepare_corpus_writes_processed_files",
+   "kind": "function",
+   "owner": null,
+   "lineno": 56,
+   "args": [
+    "fixture_epub",
+    "tmp_path"
+   ],
+   "calls": [
+    "corpus_path.read_text",
+    "prepare_corpus"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_dataset",
+   "name": "test_split_token_ids_is_contiguous_and_covers_everything",
+   "qualname": "test_split_token_ids_is_contiguous_and_covers_everything",
+   "kind": "function",
+   "owner": null,
+   "lineno": 15,
+   "args": [],
+   "calls": [
+    "len",
+    "list",
+    "range",
+    "split_token_ids"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_dataset",
+   "name": "test_make_sequence_tensors_shift_target_by_one",
+   "qualname": "test_make_sequence_tensors_shift_target_by_one",
+   "kind": "function",
+   "owner": null,
+   "lineno": 23,
+   "args": [],
+   "calls": [
+    "list",
+    "make_sequence_tensors",
+    "range",
+    "torch.equal",
+    "torch.tensor"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_dataset",
+   "name": "test_dataset_length_matches_available_windows",
+   "qualname": "test_dataset_length_matches_available_windows",
+   "kind": "function",
+   "owner": null,
+   "lineno": 33,
+   "args": [],
+   "calls": [
+    "LanguageModelDataset",
+    "len",
+    "list",
+    "range",
+    "torch.equal",
+    "torch.tensor"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_dataset",
+   "name": "test_dataset_windows_are_non_overlapping_blocks_of_positions",
+   "qualname": "test_dataset_windows_are_non_overlapping_blocks_of_positions",
+   "kind": "function",
+   "owner": null,
+   "lineno": 42,
+   "args": [],
+   "calls": [
+    "LanguageModelDataset",
+    "int",
+    "list",
+    "range"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_dataset",
+   "name": "test_build_dataloaders_shapes_and_alignment",
+   "qualname": "test_build_dataloaders_shapes_and_alignment",
+   "kind": "function",
+   "owner": null,
+   "lineno": 49,
+   "args": [],
+   "calls": [
+    "build_dataloaders",
+    "iter",
+    "list",
+    "next",
+    "range",
+    "torch.equal"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_dataset",
+   "name": "test_build_dataloaders_train_split_is_contiguous_prefix",
+   "qualname": "test_build_dataloaders_train_split_is_contiguous_prefix",
+   "kind": "function",
+   "owner": null,
+   "lineno": 59,
+   "args": [],
+   "calls": [
+    "build_dataloaders",
+    "inputs.flatten",
+    "int",
+    "list",
+    "range",
+    "seen.max",
+    "seen.min",
+    "torch.cat"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_depgraph",
+   "name": "make",
+   "qualname": "make",
+   "kind": "function",
+   "owner": null,
+   "lineno": 21,
+   "args": [
+    "module",
+    "name",
+    "owner"
+   ],
+   "calls": [
+    "Function"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_depgraph",
+   "name": "index",
+   "qualname": "index",
+   "kind": "function",
+   "owner": null,
+   "lineno": 33,
+   "args": [],
+   "calls": [
+    "append",
+    "index.setdefault",
+    "make"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_depgraph",
+   "name": "test_calls_on_lowercase_variables_never_resolve",
+   "qualname": "test_calls_on_lowercase_variables_never_resolve",
+   "kind": "function",
+   "owner": null,
+   "lineno": 50,
+   "args": [
+    "index"
+   ],
+   "calls": [
+    "make",
+    "resolve_target",
+    "set"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_depgraph",
+   "name": "test_bare_name_resolves_within_the_same_module",
+   "qualname": "test_bare_name_resolves_within_the_same_module",
+   "kind": "function",
+   "owner": null,
+   "lineno": 58,
+   "args": [
+    "index"
+   ],
+   "calls": [
+    "make",
+    "resolve_target",
+    "set"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_depgraph",
+   "name": "test_bare_name_resolves_through_an_internal_import",
+   "qualname": "test_bare_name_resolves_through_an_internal_import",
+   "kind": "function",
+   "owner": null,
+   "lineno": 67,
+   "args": [
+    "index"
+   ],
+   "calls": [
+    "make",
+    "resolve_target"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_depgraph",
+   "name": "test_bare_name_does_not_cross_into_an_unimported_module",
+   "qualname": "test_bare_name_does_not_cross_into_an_unimported_module",
+   "kind": "function",
+   "owner": null,
+   "lineno": 78,
+   "args": [
+    "index"
+   ],
+   "calls": [
+    "make",
+    "resolve_target",
+    "set"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_depgraph",
+   "name": "test_self_method_resolves_to_the_owning_class",
+   "qualname": "test_self_method_resolves_to_the_owning_class",
+   "kind": "function",
+   "owner": null,
+   "lineno": 84,
+   "args": [
+    "index"
+   ],
+   "calls": [
+    "make",
+    "resolve_target",
+    "set"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_depgraph",
+   "name": "test_class_method_resolves_across_modules",
+   "qualname": "test_class_method_resolves_across_modules",
+   "kind": "function",
+   "owner": null,
+   "lineno": 93,
+   "args": [
+    "index"
+   ],
+   "calls": [
+    "make",
+    "resolve_target",
+    "set"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_evaluate",
+   "name": "test_perplexity_is_the_exponential_of_cross_entropy",
+   "qualname": "test_perplexity_is_the_exponential_of_cross_entropy",
+   "kind": "function",
+   "owner": null,
+   "lineno": 24,
+   "args": [],
+   "calls": [
+    "math.log",
+    "perplexity_from_loss",
+    "pytest.approx"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_evaluate",
+   "name": "test_sequence_cross_entropy_matches_manual_flattened_computation",
+   "qualname": "test_sequence_cross_entropy_matches_manual_flattened_computation",
+   "kind": "function",
+   "owner": null,
+   "lineno": 30,
+   "args": [],
+   "calls": [
+    "logits.reshape",
+    "manual_seed",
+    "sequence_cross_entropy",
+    "targets.reshape",
+    "torch.Generator",
+    "torch.allclose",
+    "torch.nn.functional.cross_entropy",
+    "torch.randint",
+    "torch.randn"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_evaluate",
+   "name": "test_split_losses_reports_a_loss_for_every_split",
+   "qualname": "test_split_losses_reports_a_loss_for_every_split",
+   "kind": "function",
+   "owner": null,
+   "lineno": 40,
+   "args": [],
+   "calls": [
+    "ModelConfig",
+    "RecurrentLanguageModel",
+    "all",
+    "build_dataloaders",
+    "losses.values",
+    "manual_seed",
+    "math.isfinite",
+    "set",
+    "split_losses",
+    "tolist",
+    "torch.Generator",
+    "torch.randint"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_evaluate",
+   "name": "test_evaluate_checkpoint_works_without_any_training",
+   "qualname": "test_evaluate_checkpoint_works_without_any_training",
+   "kind": "function",
+   "owner": null,
+   "lineno": 53,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "ModelConfig",
+    "RecurrentLanguageModel",
+    "evaluate_checkpoint",
+    "manual_seed",
+    "math.exp",
+    "model.num_parameters",
+    "processed_dir.mkdir",
+    "pytest.approx",
+    "save_checkpoint",
+    "set",
+    "torch.Generator",
+    "torch.randint",
+    "torch.save"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "vocab",
+   "qualname": "vocab",
+   "kind": "function",
+   "owner": null,
+   "lineno": 25,
+   "args": [],
+   "calls": [
+    "Vocabulary.build"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "model",
+   "qualname": "model",
+   "kind": "function",
+   "owner": null,
+   "lineno": 33,
+   "args": [
+    "vocab"
+   ],
+   "calls": [
+    "ModelConfig",
+    "RecurrentLanguageModel",
+    "eval",
+    "torch.manual_seed"
+   ],
+   "doc": "A model whose output layer matches the fixture vocabulary exactly."
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "test_tokenize_prompt_reuses_the_corpus_tokenizer",
+   "qualname": "test_tokenize_prompt_reuses_the_corpus_tokenizer",
+   "kind": "function",
+   "owner": null,
+   "lineno": 41,
+   "args": [
+    "vocab"
+   ],
+   "calls": [
+    "tokenize_prompt",
+    "vocab.encode"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "test_predictions_are_ranked_and_sum_to_at_most_one",
+   "qualname": "test_predictions_are_ranked_and_sum_to_at_most_one",
+   "kind": "function",
+   "owner": null,
+   "lineno": 47,
+   "args": [
+    "model",
+    "vocab"
+   ],
+   "calls": [
+    "all",
+    "isinstance",
+    "len",
+    "next_word_predictions",
+    "sorted",
+    "sum"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "test_top_n_is_capped_by_vocabulary_size",
+   "qualname": "test_top_n_is_capped_by_vocabulary_size",
+   "kind": "function",
+   "owner": null,
+   "lineno": 60,
+   "args": [
+    "model",
+    "vocab"
+   ],
+   "calls": [
+    "len",
+    "next_word_predictions"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "test_greedy_selection_picks_the_highest_logit",
+   "qualname": "test_greedy_selection_picks_the_highest_logit",
+   "kind": "function",
+   "owner": null,
+   "lineno": 68,
+   "args": [],
+   "calls": [
+    "chosen.item",
+    "int",
+    "sample_next_token",
+    "torch.tensor"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "test_top_k_of_one_equals_greedy",
+   "qualname": "test_top_k_of_one_equals_greedy",
+   "kind": "function",
+   "owner": null,
+   "lineno": 76,
+   "args": [],
+   "calls": [
+    "greedy.item",
+    "int",
+    "item",
+    "logits.argmax",
+    "manual_seed",
+    "sample_next_token",
+    "top_one.item",
+    "torch.Generator",
+    "torch.randn"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "test_zero_temperature_falls_back_to_greedy",
+   "qualname": "test_zero_temperature_falls_back_to_greedy",
+   "kind": "function",
+   "owner": null,
+   "lineno": 88,
+   "args": [],
+   "calls": [
+    "chosen.item",
+    "int",
+    "item",
+    "logits.argmax",
+    "manual_seed",
+    "sample_next_token",
+    "torch.Generator",
+    "torch.randn"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "test_generation_is_reproducible_with_a_seed",
+   "qualname": "test_generation_is_reproducible_with_a_seed",
+   "kind": "function",
+   "owner": null,
+   "lineno": 96,
+   "args": [
+    "model",
+    "vocab"
+   ],
+   "calls": [
+    "generate"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "test_generation_produces_the_requested_number_of_words",
+   "qualname": "test_generation_produces_the_requested_number_of_words",
+   "kind": "function",
+   "owner": null,
+   "lineno": 105,
+   "args": [
+    "model",
+    "vocab"
+   ],
+   "calls": [
+    "all",
+    "generate_tokens",
+    "len"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "test_rendered_generation_keeps_the_prompt_intact",
+   "qualname": "test_rendered_generation_keeps_the_prompt_intact",
+   "kind": "function",
+   "owner": null,
+   "lineno": 114,
+   "args": [
+    "model",
+    "vocab"
+   ],
+   "calls": [
+    "generate",
+    "len",
+    "text.startswith"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "test_only_the_last_context_tokens_influence_generation",
+   "qualname": "test_only_the_last_context_tokens_influence_generation",
+   "kind": "function",
+   "owner": null,
+   "lineno": 124,
+   "args": [
+    "model",
+    "vocab"
+   ],
+   "calls": [
+    "generate_tokens",
+    "join"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "test_temperature_affects_the_sampling_distribution",
+   "qualname": "test_temperature_affects_the_sampling_distribution",
+   "kind": "function",
+   "owner": null,
+   "lineno": 141,
+   "args": [
+    "model",
+    "vocab"
+   ],
+   "calls": [
+    "generate"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "test_mismatched_vocabulary_and_model_are_rejected",
+   "qualname": "test_mismatched_vocabulary_and_model_are_rejected",
+   "kind": "function",
+   "owner": null,
+   "lineno": 150,
+   "args": [
+    "model"
+   ],
+   "calls": [
+    "Vocabulary.build",
+    "next_word_predictions",
+    "pytest.raises"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_generation",
+   "name": "test_prediction_probabilities_are_finite",
+   "qualname": "test_prediction_probabilities_are_finite",
+   "kind": "function",
+   "owner": null,
+   "lineno": 159,
+   "args": [
+    "model",
+    "vocab"
+   ],
+   "calls": [
+    "all",
+    "math.isfinite",
+    "next_word_predictions"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_model",
+   "name": "build_model",
+   "qualname": "build_model",
+   "kind": "function",
+   "owner": null,
+   "lineno": 15,
+   "args": [
+    "cell"
+   ],
+   "calls": [
+    "ModelConfig",
+    "RecurrentLanguageModel",
+    "settings.update"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_model",
+   "name": "sample_inputs",
+   "qualname": "sample_inputs",
+   "kind": "function",
+   "owner": null,
+   "lineno": 27,
+   "args": [],
+   "calls": [
+    "torch.randint"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_model",
+   "name": "test_model_maps_batch_and_time_to_vocabulary_logits",
+   "qualname": "test_model_maps_batch_and_time_to_vocabulary_logits",
+   "kind": "function",
+   "owner": null,
+   "lineno": 32,
+   "args": [
+    "cell"
+   ],
+   "calls": [
+    "build_model",
+    "pytest.mark.parametrize",
+    "sample_inputs"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_model",
+   "name": "test_backward_produces_gradients_for_every_parameter",
+   "qualname": "test_backward_produces_gradients_for_every_parameter",
+   "kind": "function",
+   "owner": null,
+   "lineno": 39,
+   "args": [
+    "cell"
+   ],
+   "calls": [
+    "build_model",
+    "item",
+    "logits.reshape",
+    "loss.backward",
+    "model",
+    "model.embedding.weight.grad.abs",
+    "model.head.weight.grad.abs",
+    "model.named_parameters",
+    "pytest.mark.parametrize",
+    "sample_inputs",
+    "sum",
+    "targets.reshape",
+    "torch.nn.functional.cross_entropy",
+    "torch.randint"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_model",
+   "name": "test_parameter_count_is_positive",
+   "qualname": "test_parameter_count_is_positive",
+   "kind": "function",
+   "owner": null,
+   "lineno": 56,
+   "args": [
+    "cell"
+   ],
+   "calls": [
+    "build_model",
+    "num_parameters",
+    "pytest.mark.parametrize"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_model",
+   "name": "test_parameter_count_grows_with_hidden_size",
+   "qualname": "test_parameter_count_grows_with_hidden_size",
+   "kind": "function",
+   "owner": null,
+   "lineno": 60,
+   "args": [],
+   "calls": [
+    "build_model",
+    "num_parameters"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_model",
+   "name": "test_dropout_keeps_output_shape_valid",
+   "qualname": "test_dropout_keeps_output_shape_valid",
+   "kind": "function",
+   "owner": null,
+   "lineno": 67,
+   "args": [],
+   "calls": [
+    "all",
+    "build_model",
+    "sample_inputs",
+    "torch.isfinite"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_model",
+   "name": "test_eval_mode_is_deterministic",
+   "qualname": "test_eval_mode_is_deterministic",
+   "kind": "function",
+   "owner": null,
+   "lineno": 74,
+   "args": [],
+   "calls": [
+    "build_model",
+    "eval",
+    "model",
+    "sample_inputs",
+    "torch.equal",
+    "torch.no_grad"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_model",
+   "name": "test_config_round_trips_through_dict",
+   "qualname": "test_config_round_trips_through_dict",
+   "kind": "function",
+   "owner": null,
+   "lineno": 85,
+   "args": [],
+   "calls": [
+    "ModelConfig",
+    "ModelConfig.from_dict",
+    "config.to_dict"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_model",
+   "name": "test_unknown_cell_type_is_rejected",
+   "qualname": "test_unknown_cell_type_is_rejected",
+   "kind": "function",
+   "owner": null,
+   "lineno": 93,
+   "args": [],
+   "calls": [
+    "build_model",
+    "pytest.raises"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_split",
+   "name": "test_extract_epub_books_groups_chapters_by_book_opening",
+   "qualname": "test_extract_epub_books_groups_chapters_by_book_opening",
+   "kind": "function",
+   "owner": null,
+   "lineno": 21,
+   "args": [
+    "two_book_epub"
+   ],
+   "calls": [
+    "extract_epub_books",
+    "len"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_split",
+   "name": "test_book_token_counts_sum_to_the_whole_corpus",
+   "qualname": "test_book_token_counts_sum_to_the_whole_corpus",
+   "kind": "function",
+   "owner": null,
+   "lineno": 31,
+   "args": [
+    "two_book_epub"
+   ],
+   "calls": [
+    "book_token_counts",
+    "extract_epub_books",
+    "extract_epub_text",
+    "len",
+    "sum",
+    "tokenize"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_split",
+   "name": "test_split_token_ids_by_books_takes_whole_books_contiguously",
+   "qualname": "test_split_token_ids_by_books_takes_whole_books_contiguously",
+   "kind": "function",
+   "owner": null,
+   "lineno": 39,
+   "args": [],
+   "calls": [
+    "len",
+    "list",
+    "range",
+    "split_token_ids_by_books"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_split",
+   "name": "test_split_token_ids_by_books_rejects_a_count_mismatch",
+   "qualname": "test_split_token_ids_by_books_rejects_a_count_mismatch",
+   "kind": "function",
+   "owner": null,
+   "lineno": 51,
+   "args": [],
+   "calls": [
+    "list",
+    "pytest.raises",
+    "range",
+    "split_token_ids_by_books"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_split",
+   "name": "test_split_token_ids_by_books_rejects_impossible_book_counts",
+   "qualname": "test_split_token_ids_by_books_rejects_impossible_book_counts",
+   "kind": "function",
+   "owner": null,
+   "lineno": 56,
+   "args": [],
+   "calls": [
+    "list",
+    "pytest.raises",
+    "range",
+    "split_token_ids_by_books"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_split",
+   "name": "test_book_split_keeps_books_out_of_each_others_splits",
+   "qualname": "test_book_split_keeps_books_out_of_each_others_splits",
+   "kind": "function",
+   "owner": null,
+   "lineno": 61,
+   "args": [
+    "two_book_epub"
+   ],
+   "calls": [
+    "book_token_counts",
+    "extract_epub_books",
+    "len",
+    "list",
+    "range",
+    "split_token_ids_by_books",
+    "sum"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_split",
+   "name": "test_build_split_dataloaders_honours_explicit_splits",
+   "qualname": "test_build_split_dataloaders_honours_explicit_splits",
+   "kind": "function",
+   "owner": null,
+   "lineno": 73,
+   "args": [],
+   "calls": [
+    "build_split_dataloaders",
+    "inputs.flatten",
+    "int",
+    "list",
+    "range",
+    "torch.cat",
+    "train_seen.max",
+    "val_seen.max",
+    "val_seen.min"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_split",
+   "name": "test_prepare_dataset_book_mode_records_the_splits",
+   "qualname": "test_prepare_dataset_book_mode_records_the_splits",
+   "kind": "function",
+   "owner": null,
+   "lineno": 85,
+   "args": [
+    "two_book_epub",
+    "tmp_path"
+   ],
+   "calls": [
+    "len",
+    "prepare_dataset",
+    "set",
+    "torch.load"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_split",
+   "name": "test_prepare_dataset_ratio_mode_remains_the_default",
+   "qualname": "test_prepare_dataset_ratio_mode_remains_the_default",
+   "kind": "function",
+   "owner": null,
+   "lineno": 102,
+   "args": [
+    "fixture_epub",
+    "tmp_path"
+   ],
+   "calls": [
+    "prepare_dataset",
+    "set",
+    "torch.load"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_tokenizer",
+   "name": "test_tokenize_separates_words_and_punctuation",
+   "qualname": "test_tokenize_separates_words_and_punctuation",
+   "kind": "function",
+   "owner": null,
+   "lineno": 8,
+   "args": [],
+   "calls": [
+    "tokenize"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_tokenizer",
+   "name": "test_tokenize_keeps_contractions_and_capitalization",
+   "qualname": "test_tokenize_keeps_contractions_and_capitalization",
+   "kind": "function",
+   "owner": null,
+   "lineno": 12,
+   "args": [],
+   "calls": [
+    "tokenize"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_tokenizer",
+   "name": "test_tokenize_handles_multicharacter_punctuation",
+   "qualname": "test_tokenize_handles_multicharacter_punctuation",
+   "kind": "function",
+   "owner": null,
+   "lineno": 23,
+   "args": [],
+   "calls": [
+    "tokenize"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_tokenizer",
+   "name": "test_vocabulary_reserves_pad_and_unk_ids",
+   "qualname": "test_vocabulary_reserves_pad_and_unk_ids",
+   "kind": "function",
+   "owner": null,
+   "lineno": 38,
+   "args": [],
+   "calls": [
+    "Vocabulary.build"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_tokenizer",
+   "name": "test_vocabulary_orders_by_frequency_then_first_appearance",
+   "qualname": "test_vocabulary_orders_by_frequency_then_first_appearance",
+   "kind": "function",
+   "owner": null,
+   "lineno": 47,
+   "args": [],
+   "calls": [
+    "Vocabulary.build"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_tokenizer",
+   "name": "test_vocabulary_respects_max_size_and_maps_rare_words_to_unk",
+   "qualname": "test_vocabulary_respects_max_size_and_maps_rare_words_to_unk",
+   "kind": "function",
+   "owner": null,
+   "lineno": 55,
+   "args": [],
+   "calls": [
+    "Vocabulary.build",
+    "vocab.encode"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_tokenizer",
+   "name": "test_encode_decode_round_trip",
+   "qualname": "test_encode_decode_round_trip",
+   "kind": "function",
+   "owner": null,
+   "lineno": 62,
+   "args": [],
+   "calls": [
+    "Vocabulary.build",
+    "vocab.decode",
+    "vocab.encode"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_tokenizer",
+   "name": "test_vocabulary_save_and_load_round_trip",
+   "qualname": "test_vocabulary_save_and_load_round_trip",
+   "kind": "function",
+   "owner": null,
+   "lineno": 69,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "Vocabulary.build",
+    "Vocabulary.load",
+    "loaded.encode",
+    "vocab.encode",
+    "vocab.save"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_training",
+   "name": "tiny_model",
+   "qualname": "tiny_model",
+   "kind": "function",
+   "owner": null,
+   "lineno": 21,
+   "args": [
+    "cell"
+   ],
+   "calls": [
+    "ModelConfig",
+    "RecurrentLanguageModel"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_training",
+   "name": "tiny_batch",
+   "qualname": "tiny_batch",
+   "kind": "function",
+   "owner": null,
+   "lineno": 35,
+   "args": [
+    "size"
+   ],
+   "calls": [
+    "manual_seed",
+    "torch.Generator",
+    "torch.randint"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_training",
+   "name": "test_overfit_one_batch_reduces_loss_substantially",
+   "qualname": "test_overfit_one_batch_reduces_loss_substantially",
+   "kind": "function",
+   "owner": null,
+   "lineno": 42,
+   "args": [],
+   "calls": [
+    "overfit_one_batch",
+    "tiny_batch",
+    "tiny_model"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_training",
+   "name": "test_overfit_one_batch_is_reproducible_with_a_seed",
+   "qualname": "test_overfit_one_batch_is_reproducible_with_a_seed",
+   "kind": "function",
+   "owner": null,
+   "lineno": 53,
+   "args": [],
+   "calls": [
+    "overfit_one_batch",
+    "tiny_batch",
+    "tiny_model",
+    "torch.manual_seed"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_training",
+   "name": "test_clip_gradients_bounds_the_total_norm",
+   "qualname": "test_clip_gradients_bounds_the_total_norm",
+   "kind": "function",
+   "owner": null,
+   "lineno": 66,
+   "args": [],
+   "calls": [
+    "clip_gradients_",
+    "logits.reshape",
+    "loss.backward",
+    "model",
+    "model.parameters",
+    "p.grad.detach",
+    "sum",
+    "targets.reshape",
+    "tiny_batch",
+    "tiny_model",
+    "torch.nn.functional.cross_entropy",
+    "torch.sqrt",
+    "total.item"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_training",
+   "name": "test_checkpoint_round_trip_reproduces_predictions",
+   "qualname": "test_checkpoint_round_trip_reproduces_predictions",
+   "kind": "function",
+   "owner": null,
+   "lineno": 84,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "eval",
+    "load_checkpoint",
+    "loaded.model",
+    "model",
+    "save_checkpoint",
+    "tiny_batch",
+    "tiny_model",
+    "torch.allclose",
+    "torch.manual_seed",
+    "torch.no_grad"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_training",
+   "name": "test_checkpoint_records_metadata_for_standalone_evaluation",
+   "qualname": "test_checkpoint_records_metadata_for_standalone_evaluation",
+   "kind": "function",
+   "owner": null,
+   "lineno": 108,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "load_checkpoint",
+    "save_checkpoint",
+    "tiny_model"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_training",
+   "name": "write_processed",
+   "qualname": "write_processed",
+   "kind": "function",
+   "owner": null,
+   "lineno": 130,
+   "args": [
+    "dir_path",
+    "ids"
+   ],
+   "calls": [
+    "torch.save"
+   ],
+   "doc": "Write the processed-data contract that training reads."
+  },
+  {
+   "module": "tests.test_training",
+   "name": "small_config",
+   "qualname": "small_config",
+   "kind": "function",
+   "owner": null,
+   "lineno": 142,
+   "args": [
+    "tmp_path",
+    "run_name",
+    "epochs"
+   ],
+   "calls": [
+    "TrainConfig"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_training",
+   "name": "test_train_model_reports_each_epoch_as_it_finishes",
+   "qualname": "test_train_model_reports_each_epoch_as_it_finishes",
+   "kind": "function",
+   "owner": null,
+   "lineno": 160,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "manual_seed",
+    "small_config",
+    "torch.Generator",
+    "torch.randint",
+    "train_model",
+    "write_processed"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_training",
+   "name": "test_training_continues_when_no_log_callback_is_given",
+   "qualname": "test_training_continues_when_no_log_callback_is_given",
+   "kind": "function",
+   "owner": null,
+   "lineno": 171,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "len",
+    "manual_seed",
+    "small_config",
+    "torch.Generator",
+    "torch.randint",
+    "train_model",
+    "write_processed"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "tests.test_training",
+   "name": "test_train_model_saves_best_checkpoint_and_tracks_history",
+   "qualname": "test_train_model_saves_best_checkpoint_and_tracks_history",
+   "kind": "function",
+   "owner": null,
+   "lineno": 180,
+   "args": [
+    "tmp_path"
+   ],
+   "calls": [
+    "TrainConfig",
+    "exists",
+    "len",
+    "manual_seed",
+    "min",
+    "torch.Generator",
+    "torch.randint",
+    "torch.save",
+    "train_model"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "scripts.check_diagram",
+   "name": "__init__",
+   "qualname": "Checker.__init__",
+   "kind": "method",
+   "owner": "Checker",
+   "lineno": 15,
+   "args": [
+    "self"
+   ],
+   "calls": [
+    "Counter",
+    "__init__",
+    "super"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "scripts.check_diagram",
+   "name": "handle_starttag",
+   "qualname": "Checker.handle_starttag",
+   "kind": "method",
+   "owner": "Checker",
+   "lineno": 21,
+   "args": [
+    "self",
+    "tag",
+    "attrs"
+   ],
+   "calls": [
+    "self.stack.append"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "scripts.check_diagram",
+   "name": "handle_endtag",
+   "qualname": "Checker.handle_endtag",
+   "kind": "method",
+   "owner": "Checker",
+   "lineno": 26,
+   "args": [
+    "self",
+    "tag"
+   ],
+   "calls": [
+    "self.errors.append",
+    "self.stack.pop"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "scripts.render_architecture",
+   "name": "load_graph",
+   "qualname": "load_graph",
+   "kind": "function",
+   "owner": null,
+   "lineno": 89,
+   "args": [],
+   "calls": [
+    "GRAPH_PATH.exists",
+    "GRAPH_PATH.read_text",
+    "SystemExit",
+    "json.loads"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "scripts.render_architecture",
+   "name": "symbol_index",
+   "qualname": "symbol_index",
+   "kind": "function",
+   "owner": null,
+   "lineno": 97,
+   "args": [
+    "graph"
+   ],
+   "calls": [
+    "append",
+    "index.setdefault"
+   ],
+   "doc": "Map every known symbol name to the modules that define it."
+  },
+  {
+   "module": "scripts.render_architecture",
+   "name": "verify_layers",
+   "qualname": "verify_layers",
+   "kind": "function",
+   "owner": null,
+   "lineno": 108,
+   "args": [
+    "graph"
+   ],
+   "calls": [
+    "SystemExit",
+    "join",
+    "sorted",
+    "symbol_index"
+   ],
+   "doc": "Fail loudly if a layer names a symbol that no longer exists."
+  },
+  {
+   "module": "scripts.render_architecture",
+   "name": "module_of",
+   "qualname": "module_of",
+   "kind": "function",
+   "owner": null,
+   "lineno": 124,
+   "args": [
+    "graph",
+    "symbol"
+   ],
+   "calls": [
+    "index.get",
+    "symbol_index"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "scripts.render_architecture",
+   "name": "layer_nodes",
+   "qualname": "layer_nodes",
+   "kind": "function",
+   "owner": null,
+   "lineno": 133,
+   "args": [
+    "graph"
+   ],
+   "calls": [
+    "built.append",
+    "dict.fromkeys",
+    "index.get",
+    "len",
+    "module.split",
+    "nodes.append",
+    "symbol_index"
+   ],
+   "doc": "Per layer, the (node_id, label) pairs actually defined in the code."
+  },
+  {
+   "module": "scripts.render_architecture",
+   "name": "graph_edges",
+   "qualname": "graph_edges",
+   "kind": "function",
+   "owner": null,
+   "lineno": 148,
+   "args": [
+    "graph",
+    "nodes"
+   ],
+   "calls": [
+    "drawn.append",
+    "enumerate",
+    "seen.add",
+    "set"
+   ],
+   "doc": "Call edges whose two ends are both drawn, deduplicated."
+  },
+  {
+   "module": "scripts.render_architecture",
+   "name": "library_users",
+   "qualname": "library_users",
+   "kind": "function",
+   "owner": null,
+   "lineno": 166,
+   "args": [
+    "graph"
+   ],
+   "calls": [
+    "append",
+    "imported.split",
+    "lib.split",
+    "set",
+    "sorted",
+    "users.items",
+    "users.setdefault"
+   ],
+   "doc": "Which modules import each third-party library."
+  },
+  {
+   "module": "scripts.render_architecture",
+   "name": "render_markdown",
+   "qualname": "render_markdown",
+   "kind": "function",
+   "owner": null,
+   "lineno": 177,
+   "args": [
+    "graph"
+   ],
+   "calls": [
+    "enumerate",
+    "join",
+    "layer_nodes",
+    "library_users",
+    "lines.append",
+    "sorted",
+    "split"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "scripts.render_architecture",
+   "name": "_wrap",
+   "qualname": "_wrap",
+   "kind": "function",
+   "owner": null,
+   "lineno": 296,
+   "args": [
+    "text",
+    "width"
+   ],
+   "calls": [
+    "len",
+    "lines.append",
+    "strip",
+    "text.split"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "scripts.render_architecture",
+   "name": "_node_width",
+   "qualname": "_node_width",
+   "kind": "function",
+   "owner": null,
+   "lineno": 310,
+   "args": [
+    "label"
+   ],
+   "calls": [
+    "int",
+    "len",
+    "max",
+    "min"
+   ],
+   "doc": ""
+  },
+  {
+   "module": "scripts.render_architecture",
+   "name": "render_svg",
+   "qualname": "render_svg",
+   "kind": "function",
+   "owner": null,
+   "lineno": 314,
+   "args": [
+    "graph",
+    "nodes",
+    "edges"
+   ],
+   "calls": [
+    "_node_width",
+    "_wrap",
+    "band_starts.append",
+    "enumerate",
+    "html.escape",
+    "join",
+    "len",
+    "lib.split",
+    "libraries.append",
+    "library.split",
+    "library_users",
+    "m.split",
+    "max",
+    "parts.append"
+   ],
+   "doc": "Layered top-down graph: boxes per layer, curved edges behind them."
+  },
+  {
+   "module": "scripts.render_architecture",
+   "name": "render_html",
+   "qualname": "render_html",
+   "kind": "function",
+   "owner": null,
+   "lineno": 464,
+   "args": [
+    "graph",
+    "svg"
+   ],
+   "calls": [
+    "html.escape",
+    "join",
+    "len",
+    "library_users",
+    "m.split",
+    "model_panels.append",
+    "module_cards.append",
+    "sorted",
+    "startswith",
+    "users.items"
+   ],
+   "doc": "Assemble the standalone page: diagram, per-model panels, module cards."
+  },
+  {
+   "module": "scripts.render_architecture",
+   "name": "main",
+   "qualname": "main",
+   "kind": "function",
+   "owner": null,
+   "lineno": 535,
+   "args": [],
+   "calls": [
+    "DOCS.mkdir",
+    "SystemExit",
+    "graph_edges",
+    "html_path.relative_to",
+    "html_path.write_text",
+    "json.dumps",
+    "layer_nodes",
+    "len",
+    "load_graph",
+    "markdown_path.relative_to",
+    "markdown_path.write_text",
+    "print",
+    "read_text",
+    "render_html",
+    "render_markdown",
+    "render_svg",
+    "sum",
+    "verify_layers",
+    "write_text"
+   ],
+   "doc": ""
+  }
+ ],
+ "edges": [
+  {
+   "from": "scripts.render_architecture:layer_nodes",
+   "to": "scripts.render_architecture:symbol_index",
+   "call": "symbol_index"
+  },
+  {
+   "from": "scripts.render_architecture:main",
+   "to": "scripts.render_architecture:graph_edges",
+   "call": "graph_edges"
+  },
+  {
+   "from": "scripts.render_architecture:main",
+   "to": "scripts.render_architecture:layer_nodes",
+   "call": "layer_nodes"
+  },
+  {
+   "from": "scripts.render_architecture:main",
+   "to": "scripts.render_architecture:load_graph",
+   "call": "load_graph"
+  },
+  {
+   "from": "scripts.render_architecture:main",
+   "to": "scripts.render_architecture:render_html",
+   "call": "render_html"
+  },
+  {
+   "from": "scripts.render_architecture:main",
+   "to": "scripts.render_architecture:render_markdown",
+   "call": "render_markdown"
+  },
+  {
+   "from": "scripts.render_architecture:main",
+   "to": "scripts.render_architecture:render_svg",
+   "call": "render_svg"
+  },
+  {
+   "from": "scripts.render_architecture:main",
+   "to": "scripts.render_architecture:verify_layers",
+   "call": "verify_layers"
+  },
+  {
+   "from": "scripts.render_architecture:module_of",
+   "to": "scripts.render_architecture:symbol_index",
+   "call": "symbol_index"
+  },
+  {
+   "from": "scripts.render_architecture:render_html",
+   "to": "scripts.render_architecture:library_users",
+   "call": "library_users"
+  },
+  {
+   "from": "scripts.render_architecture:render_markdown",
+   "to": "scripts.render_architecture:layer_nodes",
+   "call": "layer_nodes"
+  },
+  {
+   "from": "scripts.render_architecture:render_markdown",
+   "to": "scripts.render_architecture:library_users",
+   "call": "library_users"
+  },
+  {
+   "from": "scripts.render_architecture:render_svg",
+   "to": "scripts.render_architecture:_node_width",
+   "call": "_node_width"
+  },
+  {
+   "from": "scripts.render_architecture:render_svg",
+   "to": "scripts.render_architecture:_wrap",
+   "call": "_wrap"
+  },
+  {
+   "from": "scripts.render_architecture:render_svg",
+   "to": "scripts.render_architecture:library_users",
+   "call": "library_users"
+  },
+  {
+   "from": "scripts.render_architecture:verify_layers",
+   "to": "scripts.render_architecture:symbol_index",
+   "call": "symbol_index"
+  },
+  {
+   "from": "src.compare:load_run",
+   "to": "src.compare:history_path",
+   "call": "history_path"
+  },
+  {
+   "from": "src.compare:load_run",
+   "to": "src.train:load_checkpoint",
+   "call": "load_checkpoint"
+  },
+  {
+   "from": "src.compare:main",
+   "to": "src.compare:_build_parser",
+   "call": "_build_parser"
+  },
+  {
+   "from": "src.compare:main",
+   "to": "src.compare:discover_runs",
+   "call": "discover_runs"
+  },
+  {
+   "from": "src.compare:main",
+   "to": "src.compare:format_table",
+   "call": "format_table"
+  },
+  {
+   "from": "src.compare:main",
+   "to": "src.compare:load_run",
+   "call": "load_run"
+  },
+  {
+   "from": "src.compare:main",
+   "to": "src.compare:to_markdown",
+   "call": "to_markdown"
+  },
+  {
+   "from": "src.compare:main",
+   "to": "src.evaluate:evaluate_checkpoint",
+   "call": "evaluate_checkpoint"
+  },
+  {
+   "from": "src.data:LanguageModelDataset.__init__",
+   "to": "src.data:make_sequence_tensors",
+   "call": "make_sequence_tensors"
+  },
+  {
+   "from": "src.data:book_token_counts",
+   "to": "src.data:tokenize",
+   "call": "tokenize"
+  },
+  {
+   "from": "src.data:build_dataloaders",
+   "to": "src.data:build_split_dataloaders",
+   "call": "build_split_dataloaders"
+  },
+  {
+   "from": "src.data:build_dataloaders",
+   "to": "src.data:split_token_ids",
+   "call": "split_token_ids"
+  },
+  {
+   "from": "src.data:clean_text",
+   "to": "src.data:strip_boilerplate",
+   "call": "strip_boilerplate"
+  },
+  {
+   "from": "src.data:corpus_statistics",
+   "to": "src.data:tokenize",
+   "call": "tokenize"
+  },
+  {
+   "from": "src.data:extract_epub_books",
+   "to": "src.data:book_start_indices",
+   "call": "book_start_indices"
+  },
+  {
+   "from": "src.data:extract_epub_books",
+   "to": "src.data:clean_text",
+   "call": "clean_text"
+  },
+  {
+   "from": "src.data:extract_epub_books",
+   "to": "src.data:extract_epub_chapters",
+   "call": "extract_epub_chapters"
+  },
+  {
+   "from": "src.data:extract_epub_text",
+   "to": "src.data:extract_epub_books",
+   "call": "extract_epub_books"
+  },
+  {
+   "from": "src.data:main",
+   "to": "src.data:Vocabulary.load",
+   "call": "Vocabulary.load"
+  },
+  {
+   "from": "src.data:main",
+   "to": "src.data:_build_parser",
+   "call": "_build_parser"
+  },
+  {
+   "from": "src.data:main",
+   "to": "src.data:build_dataloaders",
+   "call": "build_dataloaders"
+  },
+  {
+   "from": "src.data:main",
+   "to": "src.data:format_statistics",
+   "call": "format_statistics"
+  },
+  {
+   "from": "src.data:main",
+   "to": "src.data:prepare_dataset",
+   "call": "prepare_dataset"
+  },
+  {
+   "from": "src.data:prepare_corpus",
+   "to": "src.data:extract_epub_text",
+   "call": "extract_epub_text"
+  },
+  {
+   "from": "src.data:prepare_dataset",
+   "to": "src.data:Vocabulary.build",
+   "call": "Vocabulary.build"
+  },
+  {
+   "from": "src.data:prepare_dataset",
+   "to": "src.data:book_token_counts",
+   "call": "book_token_counts"
+  },
+  {
+   "from": "src.data:prepare_dataset",
+   "to": "src.data:corpus_statistics",
+   "call": "corpus_statistics"
+  },
+  {
+   "from": "src.data:prepare_dataset",
+   "to": "src.data:extract_epub_books",
+   "call": "extract_epub_books"
+  },
+  {
+   "from": "src.data:prepare_dataset",
+   "to": "src.data:split_token_ids",
+   "call": "split_token_ids"
+  },
+  {
+   "from": "src.data:prepare_dataset",
+   "to": "src.data:split_token_ids_by_books",
+   "call": "split_token_ids_by_books"
+  },
+  {
+   "from": "src.data:prepare_dataset",
+   "to": "src.data:tokenize",
+   "call": "tokenize"
+  },
+  {
+   "from": "src.evaluate:evaluate_checkpoint",
+   "to": "src.data:build_dataloaders",
+   "call": "build_dataloaders"
+  },
+  {
+   "from": "src.evaluate:evaluate_checkpoint",
+   "to": "src.data:build_split_dataloaders",
+   "call": "build_split_dataloaders"
+  },
+  {
+   "from": "src.evaluate:evaluate_checkpoint",
+   "to": "src.evaluate:perplexity_from_loss",
+   "call": "perplexity_from_loss"
+  },
+  {
+   "from": "src.evaluate:evaluate_checkpoint",
+   "to": "src.evaluate:split_losses",
+   "call": "split_losses"
+  },
+  {
+   "from": "src.evaluate:evaluate_checkpoint",
+   "to": "src.train:load_checkpoint",
+   "call": "load_checkpoint"
+  },
+  {
+   "from": "src.evaluate:evaluate_checkpoint",
+   "to": "src.train:load_processed",
+   "call": "load_processed"
+  },
+  {
+   "from": "src.evaluate:evaluate_checkpoint",
+   "to": "src.train:resolve_device",
+   "call": "resolve_device"
+  },
+  {
+   "from": "src.evaluate:main",
+   "to": "src.evaluate:_build_parser",
+   "call": "_build_parser"
+  },
+  {
+   "from": "src.evaluate:main",
+   "to": "src.evaluate:evaluate_checkpoint",
+   "call": "evaluate_checkpoint"
+  },
+  {
+   "from": "src.evaluate:split_losses",
+   "to": "src.evaluate:sequence_cross_entropy",
+   "call": "sequence_cross_entropy"
+  },
+  {
+   "from": "src.generate:generate",
+   "to": "src.generate:generate_tokens",
+   "call": "generate_tokens"
+  },
+  {
+   "from": "src.generate:generate",
+   "to": "src.generate:join_tokens",
+   "call": "join_tokens"
+  },
+  {
+   "from": "src.generate:generate_tokens",
+   "to": "src.generate:check_vocab_matches_model",
+   "call": "check_vocab_matches_model"
+  },
+  {
+   "from": "src.generate:generate_tokens",
+   "to": "src.generate:sample_next_token",
+   "call": "sample_next_token"
+  },
+  {
+   "from": "src.generate:generate_tokens",
+   "to": "src.generate:tokenize_prompt",
+   "call": "tokenize_prompt"
+  },
+  {
+   "from": "src.generate:main",
+   "to": "src.data:Vocabulary.load",
+   "call": "Vocabulary.load"
+  },
+  {
+   "from": "src.generate:main",
+   "to": "src.generate:build_parser",
+   "call": "build_parser"
+  },
+  {
+   "from": "src.generate:main",
+   "to": "src.generate:format_predictions",
+   "call": "format_predictions"
+  },
+  {
+   "from": "src.generate:main",
+   "to": "src.generate:generate",
+   "call": "generate"
+  },
+  {
+   "from": "src.generate:main",
+   "to": "src.generate:next_word_predictions",
+   "call": "next_word_predictions"
+  },
+  {
+   "from": "src.generate:main",
+   "to": "src.train:load_checkpoint",
+   "call": "load_checkpoint"
+  },
+  {
+   "from": "src.generate:main",
+   "to": "src.train:resolve_device",
+   "call": "resolve_device"
+  },
+  {
+   "from": "src.generate:next_word_predictions",
+   "to": "src.generate:check_vocab_matches_model",
+   "call": "check_vocab_matches_model"
+  },
+  {
+   "from": "src.generate:next_word_predictions",
+   "to": "src.generate:tokenize_prompt",
+   "call": "tokenize_prompt"
+  },
+  {
+   "from": "src.generate:tokenize_prompt",
+   "to": "src.data:tokenize",
+   "call": "tokenize"
+  },
+  {
+   "from": "src.train:load_checkpoint",
+   "to": "src.model:ModelConfig.from_dict",
+   "call": "ModelConfig.from_dict"
+  },
+  {
+   "from": "src.train:main",
+   "to": "src.train:_build_parser",
+   "call": "_build_parser"
+  },
+  {
+   "from": "src.train:main",
+   "to": "src.train:format_history",
+   "call": "format_history"
+  },
+  {
+   "from": "src.train:main",
+   "to": "src.train:resolve_device",
+   "call": "resolve_device"
+  },
+  {
+   "from": "src.train:main",
+   "to": "src.train:train_model",
+   "call": "train_model"
+  },
+  {
+   "from": "src.train:overfit_one_batch",
+   "to": "src.evaluate:sequence_cross_entropy",
+   "call": "sequence_cross_entropy"
+  },
+  {
+   "from": "src.train:overfit_one_batch",
+   "to": "src.train:clip_gradients_",
+   "call": "clip_gradients_"
+  },
+  {
+   "from": "src.train:overfit_one_batch",
+   "to": "src.train:set_seed",
+   "call": "set_seed"
+  },
+  {
+   "from": "src.train:train_model",
+   "to": "src.data:build_dataloaders",
+   "call": "build_dataloaders"
+  },
+  {
+   "from": "src.train:train_model",
+   "to": "src.data:build_split_dataloaders",
+   "call": "build_split_dataloaders"
+  },
+  {
+   "from": "src.train:train_model",
+   "to": "src.evaluate:sequence_cross_entropy",
+   "call": "sequence_cross_entropy"
+  },
+  {
+   "from": "src.train:train_model",
+   "to": "src.evaluate:split_losses",
+   "call": "split_losses"
+  },
+  {
+   "from": "src.train:train_model",
+   "to": "src.train:clip_gradients_",
+   "call": "clip_gradients_"
+  },
+  {
+   "from": "src.train:train_model",
+   "to": "src.train:load_processed",
+   "call": "load_processed"
+  },
+  {
+   "from": "src.train:train_model",
+   "to": "src.train:overfit_one_batch",
+   "call": "overfit_one_batch"
+  },
+  {
+   "from": "src.train:train_model",
+   "to": "src.train:resolve_device",
+   "call": "resolve_device"
+  },
+  {
+   "from": "src.train:train_model",
+   "to": "src.train:save_checkpoint",
+   "call": "save_checkpoint"
+  },
+  {
+   "from": "src.train:train_model",
+   "to": "src.train:set_seed",
+   "call": "set_seed"
+  },
+  {
+   "from": "tests.conftest:fixture_epub",
+   "to": "tests.conftest:write_epub",
+   "call": "write_epub"
+  },
+  {
+   "from": "tests.conftest:two_book_epub",
+   "to": "tests.conftest:write_two_book_epub",
+   "call": "write_two_book_epub"
+  },
+  {
+   "from": "tests.conftest:write_two_book_epub",
+   "to": "tests.conftest:_chapter",
+   "call": "_chapter"
+  },
+  {
+   "from": "tests.test_compare:test_empty_run_list_produces_a_header_only_table",
+   "to": "src.compare:format_table",
+   "call": "format_table"
+  },
+  {
+   "from": "tests.test_compare:test_load_run_reads_metrics_from_history_and_checkpoint",
+   "to": "src.compare:load_run",
+   "call": "load_run"
+  },
+  {
+   "from": "tests.test_compare:test_load_run_reads_metrics_from_history_and_checkpoint",
+   "to": "tests.test_compare:write_run",
+   "call": "write_run"
+  },
+  {
+   "from": "tests.test_compare:test_missing_history_file_is_reported_clearly",
+   "to": "src.compare:load_run",
+   "call": "load_run"
+  },
+  {
+   "from": "tests.test_compare:test_missing_metrics_render_as_not_available",
+   "to": "src.compare:format_table",
+   "call": "format_table"
+  },
+  {
+   "from": "tests.test_compare:test_table_lists_every_run_in_the_requested_order",
+   "to": "src.compare:format_table",
+   "call": "format_table"
+  },
+  {
+   "from": "tests.test_compare:test_table_lists_every_run_in_the_requested_order",
+   "to": "src.compare:load_run",
+   "call": "load_run"
+  },
+  {
+   "from": "tests.test_compare:test_table_lists_every_run_in_the_requested_order",
+   "to": "tests.test_compare:write_run",
+   "call": "write_run"
+  },
+  {
+   "from": "tests.test_compare:test_unevaluated_test_perplexity_is_shown_as_pending",
+   "to": "src.compare:format_table",
+   "call": "format_table"
+  },
+  {
+   "from": "tests.test_compare:test_unevaluated_test_perplexity_is_shown_as_pending",
+   "to": "src.compare:load_run",
+   "call": "load_run"
+  },
+  {
+   "from": "tests.test_compare:test_unevaluated_test_perplexity_is_shown_as_pending",
+   "to": "tests.test_compare:write_run",
+   "call": "write_run"
+  },
+  {
+   "from": "tests.test_compare:test_val_perplexity_is_exp_of_best_val_loss",
+   "to": "src.compare:load_run",
+   "call": "load_run"
+  },
+  {
+   "from": "tests.test_compare:test_val_perplexity_is_exp_of_best_val_loss",
+   "to": "tests.test_compare:write_run",
+   "call": "write_run"
+  },
+  {
+   "from": "tests.test_compare:write_run",
+   "to": "src.train:save_checkpoint",
+   "call": "save_checkpoint"
+  },
+  {
+   "from": "tests.test_corpus:test_clean_text_collapses_excess_whitespace",
+   "to": "src.data:clean_text",
+   "call": "clean_text"
+  },
+  {
+   "from": "tests.test_corpus:test_clean_text_drops_page_numbers_and_artifact_lines",
+   "to": "src.data:clean_text",
+   "call": "clean_text"
+  },
+  {
+   "from": "tests.test_corpus:test_clean_text_joins_line_break_hyphenation",
+   "to": "src.data:clean_text",
+   "call": "clean_text"
+  },
+  {
+   "from": "tests.test_corpus:test_clean_text_normalizes_typographic_quotes",
+   "to": "src.data:clean_text",
+   "call": "clean_text"
+  },
+  {
+   "from": "tests.test_corpus:test_corpus_statistics_counts_characters_words_and_uniques",
+   "to": "src.data:corpus_statistics",
+   "call": "corpus_statistics"
+  },
+  {
+   "from": "tests.test_corpus:test_extract_epub_text_drops_markup_and_navigation",
+   "to": "src.data:extract_epub_text",
+   "call": "extract_epub_text"
+  },
+  {
+   "from": "tests.test_corpus:test_extract_epub_text_follows_spine_order",
+   "to": "src.data:extract_epub_text",
+   "call": "extract_epub_text"
+  },
+  {
+   "from": "tests.test_corpus:test_prepare_corpus_writes_processed_files",
+   "to": "src.data:prepare_corpus",
+   "call": "prepare_corpus"
+  },
+  {
+   "from": "tests.test_dataset:test_build_dataloaders_shapes_and_alignment",
+   "to": "src.data:build_dataloaders",
+   "call": "build_dataloaders"
+  },
+  {
+   "from": "tests.test_dataset:test_build_dataloaders_train_split_is_contiguous_prefix",
+   "to": "src.data:build_dataloaders",
+   "call": "build_dataloaders"
+  },
+  {
+   "from": "tests.test_dataset:test_make_sequence_tensors_shift_target_by_one",
+   "to": "src.data:make_sequence_tensors",
+   "call": "make_sequence_tensors"
+  },
+  {
+   "from": "tests.test_dataset:test_split_token_ids_is_contiguous_and_covers_everything",
+   "to": "src.data:split_token_ids",
+   "call": "split_token_ids"
+  },
+  {
+   "from": "tests.test_depgraph:index",
+   "to": "tests.test_depgraph:make",
+   "call": "make"
+  },
+  {
+   "from": "tests.test_depgraph:test_bare_name_does_not_cross_into_an_unimported_module",
+   "to": "tests.test_depgraph:make",
+   "call": "make"
+  },
+  {
+   "from": "tests.test_depgraph:test_bare_name_resolves_through_an_internal_import",
+   "to": "tests.test_depgraph:make",
+   "call": "make"
+  },
+  {
+   "from": "tests.test_depgraph:test_bare_name_resolves_within_the_same_module",
+   "to": "tests.test_depgraph:make",
+   "call": "make"
+  },
+  {
+   "from": "tests.test_depgraph:test_calls_on_lowercase_variables_never_resolve",
+   "to": "tests.test_depgraph:make",
+   "call": "make"
+  },
+  {
+   "from": "tests.test_depgraph:test_class_method_resolves_across_modules",
+   "to": "tests.test_depgraph:make",
+   "call": "make"
+  },
+  {
+   "from": "tests.test_depgraph:test_self_method_resolves_to_the_owning_class",
+   "to": "tests.test_depgraph:make",
+   "call": "make"
+  },
+  {
+   "from": "tests.test_evaluate:test_evaluate_checkpoint_works_without_any_training",
+   "to": "src.evaluate:evaluate_checkpoint",
+   "call": "evaluate_checkpoint"
+  },
+  {
+   "from": "tests.test_evaluate:test_evaluate_checkpoint_works_without_any_training",
+   "to": "src.train:save_checkpoint",
+   "call": "save_checkpoint"
+  },
+  {
+   "from": "tests.test_evaluate:test_perplexity_is_the_exponential_of_cross_entropy",
+   "to": "src.evaluate:perplexity_from_loss",
+   "call": "perplexity_from_loss"
+  },
+  {
+   "from": "tests.test_evaluate:test_sequence_cross_entropy_matches_manual_flattened_computation",
+   "to": "src.evaluate:sequence_cross_entropy",
+   "call": "sequence_cross_entropy"
+  },
+  {
+   "from": "tests.test_evaluate:test_split_losses_reports_a_loss_for_every_split",
+   "to": "src.data:build_dataloaders",
+   "call": "build_dataloaders"
+  },
+  {
+   "from": "tests.test_evaluate:test_split_losses_reports_a_loss_for_every_split",
+   "to": "src.evaluate:split_losses",
+   "call": "split_losses"
+  },
+  {
+   "from": "tests.test_generation:test_generation_is_reproducible_with_a_seed",
+   "to": "src.generate:generate",
+   "call": "generate"
+  },
+  {
+   "from": "tests.test_generation:test_generation_produces_the_requested_number_of_words",
+   "to": "src.generate:generate_tokens",
+   "call": "generate_tokens"
+  },
+  {
+   "from": "tests.test_generation:test_greedy_selection_picks_the_highest_logit",
+   "to": "src.generate:sample_next_token",
+   "call": "sample_next_token"
+  },
+  {
+   "from": "tests.test_generation:test_mismatched_vocabulary_and_model_are_rejected",
+   "to": "src.data:Vocabulary.build",
+   "call": "Vocabulary.build"
+  },
+  {
+   "from": "tests.test_generation:test_mismatched_vocabulary_and_model_are_rejected",
+   "to": "src.generate:next_word_predictions",
+   "call": "next_word_predictions"
+  },
+  {
+   "from": "tests.test_generation:test_only_the_last_context_tokens_influence_generation",
+   "to": "src.generate:generate_tokens",
+   "call": "generate_tokens"
+  },
+  {
+   "from": "tests.test_generation:test_prediction_probabilities_are_finite",
+   "to": "src.generate:next_word_predictions",
+   "call": "next_word_predictions"
+  },
+  {
+   "from": "tests.test_generation:test_predictions_are_ranked_and_sum_to_at_most_one",
+   "to": "src.generate:next_word_predictions",
+   "call": "next_word_predictions"
+  },
+  {
+   "from": "tests.test_generation:test_rendered_generation_keeps_the_prompt_intact",
+   "to": "src.generate:generate",
+   "call": "generate"
+  },
+  {
+   "from": "tests.test_generation:test_temperature_affects_the_sampling_distribution",
+   "to": "src.generate:generate",
+   "call": "generate"
+  },
+  {
+   "from": "tests.test_generation:test_tokenize_prompt_reuses_the_corpus_tokenizer",
+   "to": "src.generate:tokenize_prompt",
+   "call": "tokenize_prompt"
+  },
+  {
+   "from": "tests.test_generation:test_top_k_of_one_equals_greedy",
+   "to": "src.generate:sample_next_token",
+   "call": "sample_next_token"
+  },
+  {
+   "from": "tests.test_generation:test_top_n_is_capped_by_vocabulary_size",
+   "to": "src.generate:next_word_predictions",
+   "call": "next_word_predictions"
+  },
+  {
+   "from": "tests.test_generation:test_zero_temperature_falls_back_to_greedy",
+   "to": "src.generate:sample_next_token",
+   "call": "sample_next_token"
+  },
+  {
+   "from": "tests.test_generation:vocab",
+   "to": "src.data:Vocabulary.build",
+   "call": "Vocabulary.build"
+  },
+  {
+   "from": "tests.test_model:test_backward_produces_gradients_for_every_parameter",
+   "to": "tests.test_model:build_model",
+   "call": "build_model"
+  },
+  {
+   "from": "tests.test_model:test_backward_produces_gradients_for_every_parameter",
+   "to": "tests.test_model:sample_inputs",
+   "call": "sample_inputs"
+  },
+  {
+   "from": "tests.test_model:test_config_round_trips_through_dict",
+   "to": "src.model:ModelConfig.from_dict",
+   "call": "ModelConfig.from_dict"
+  },
+  {
+   "from": "tests.test_model:test_dropout_keeps_output_shape_valid",
+   "to": "tests.test_model:build_model",
+   "call": "build_model"
+  },
+  {
+   "from": "tests.test_model:test_dropout_keeps_output_shape_valid",
+   "to": "tests.test_model:sample_inputs",
+   "call": "sample_inputs"
+  },
+  {
+   "from": "tests.test_model:test_eval_mode_is_deterministic",
+   "to": "tests.test_model:build_model",
+   "call": "build_model"
+  },
+  {
+   "from": "tests.test_model:test_eval_mode_is_deterministic",
+   "to": "tests.test_model:sample_inputs",
+   "call": "sample_inputs"
+  },
+  {
+   "from": "tests.test_model:test_model_maps_batch_and_time_to_vocabulary_logits",
+   "to": "tests.test_model:build_model",
+   "call": "build_model"
+  },
+  {
+   "from": "tests.test_model:test_model_maps_batch_and_time_to_vocabulary_logits",
+   "to": "tests.test_model:sample_inputs",
+   "call": "sample_inputs"
+  },
+  {
+   "from": "tests.test_model:test_parameter_count_grows_with_hidden_size",
+   "to": "tests.test_model:build_model",
+   "call": "build_model"
+  },
+  {
+   "from": "tests.test_model:test_parameter_count_is_positive",
+   "to": "tests.test_model:build_model",
+   "call": "build_model"
+  },
+  {
+   "from": "tests.test_model:test_unknown_cell_type_is_rejected",
+   "to": "tests.test_model:build_model",
+   "call": "build_model"
+  },
+  {
+   "from": "tests.test_split:test_book_split_keeps_books_out_of_each_others_splits",
+   "to": "src.data:book_token_counts",
+   "call": "book_token_counts"
+  },
+  {
+   "from": "tests.test_split:test_book_split_keeps_books_out_of_each_others_splits",
+   "to": "src.data:extract_epub_books",
+   "call": "extract_epub_books"
+  },
+  {
+   "from": "tests.test_split:test_book_split_keeps_books_out_of_each_others_splits",
+   "to": "src.data:split_token_ids_by_books",
+   "call": "split_token_ids_by_books"
+  },
+  {
+   "from": "tests.test_split:test_book_token_counts_sum_to_the_whole_corpus",
+   "to": "src.data:book_token_counts",
+   "call": "book_token_counts"
+  },
+  {
+   "from": "tests.test_split:test_book_token_counts_sum_to_the_whole_corpus",
+   "to": "src.data:extract_epub_books",
+   "call": "extract_epub_books"
+  },
+  {
+   "from": "tests.test_split:test_book_token_counts_sum_to_the_whole_corpus",
+   "to": "src.data:extract_epub_text",
+   "call": "extract_epub_text"
+  },
+  {
+   "from": "tests.test_split:test_book_token_counts_sum_to_the_whole_corpus",
+   "to": "src.data:tokenize",
+   "call": "tokenize"
+  },
+  {
+   "from": "tests.test_split:test_build_split_dataloaders_honours_explicit_splits",
+   "to": "src.data:build_split_dataloaders",
+   "call": "build_split_dataloaders"
+  },
+  {
+   "from": "tests.test_split:test_extract_epub_books_groups_chapters_by_book_opening",
+   "to": "src.data:extract_epub_books",
+   "call": "extract_epub_books"
+  },
+  {
+   "from": "tests.test_split:test_prepare_dataset_book_mode_records_the_splits",
+   "to": "src.data:prepare_dataset",
+   "call": "prepare_dataset"
+  },
+  {
+   "from": "tests.test_split:test_prepare_dataset_ratio_mode_remains_the_default",
+   "to": "src.data:prepare_dataset",
+   "call": "prepare_dataset"
+  },
+  {
+   "from": "tests.test_split:test_split_token_ids_by_books_rejects_a_count_mismatch",
+   "to": "src.data:split_token_ids_by_books",
+   "call": "split_token_ids_by_books"
+  },
+  {
+   "from": "tests.test_split:test_split_token_ids_by_books_rejects_impossible_book_counts",
+   "to": "src.data:split_token_ids_by_books",
+   "call": "split_token_ids_by_books"
+  },
+  {
+   "from": "tests.test_split:test_split_token_ids_by_books_takes_whole_books_contiguously",
+   "to": "src.data:split_token_ids_by_books",
+   "call": "split_token_ids_by_books"
+  },
+  {
+   "from": "tests.test_tokenizer:test_encode_decode_round_trip",
+   "to": "src.data:Vocabulary.build",
+   "call": "Vocabulary.build"
+  },
+  {
+   "from": "tests.test_tokenizer:test_tokenize_handles_multicharacter_punctuation",
+   "to": "src.data:tokenize",
+   "call": "tokenize"
+  },
+  {
+   "from": "tests.test_tokenizer:test_tokenize_keeps_contractions_and_capitalization",
+   "to": "src.data:tokenize",
+   "call": "tokenize"
+  },
+  {
+   "from": "tests.test_tokenizer:test_tokenize_separates_words_and_punctuation",
+   "to": "src.data:tokenize",
+   "call": "tokenize"
+  },
+  {
+   "from": "tests.test_tokenizer:test_vocabulary_orders_by_frequency_then_first_appearance",
+   "to": "src.data:Vocabulary.build",
+   "call": "Vocabulary.build"
+  },
+  {
+   "from": "tests.test_tokenizer:test_vocabulary_reserves_pad_and_unk_ids",
+   "to": "src.data:Vocabulary.build",
+   "call": "Vocabulary.build"
+  },
+  {
+   "from": "tests.test_tokenizer:test_vocabulary_respects_max_size_and_maps_rare_words_to_unk",
+   "to": "src.data:Vocabulary.build",
+   "call": "Vocabulary.build"
+  },
+  {
+   "from": "tests.test_tokenizer:test_vocabulary_save_and_load_round_trip",
+   "to": "src.data:Vocabulary.build",
+   "call": "Vocabulary.build"
+  },
+  {
+   "from": "tests.test_tokenizer:test_vocabulary_save_and_load_round_trip",
+   "to": "src.data:Vocabulary.load",
+   "call": "Vocabulary.load"
+  },
+  {
+   "from": "tests.test_training:test_checkpoint_records_metadata_for_standalone_evaluation",
+   "to": "src.train:load_checkpoint",
+   "call": "load_checkpoint"
+  },
+  {
+   "from": "tests.test_training:test_checkpoint_records_metadata_for_standalone_evaluation",
+   "to": "src.train:save_checkpoint",
+   "call": "save_checkpoint"
+  },
+  {
+   "from": "tests.test_training:test_checkpoint_records_metadata_for_standalone_evaluation",
+   "to": "tests.test_training:tiny_model",
+   "call": "tiny_model"
+  },
+  {
+   "from": "tests.test_training:test_checkpoint_round_trip_reproduces_predictions",
+   "to": "src.train:load_checkpoint",
+   "call": "load_checkpoint"
+  },
+  {
+   "from": "tests.test_training:test_checkpoint_round_trip_reproduces_predictions",
+   "to": "src.train:save_checkpoint",
+   "call": "save_checkpoint"
+  },
+  {
+   "from": "tests.test_training:test_checkpoint_round_trip_reproduces_predictions",
+   "to": "tests.test_training:tiny_batch",
+   "call": "tiny_batch"
+  },
+  {
+   "from": "tests.test_training:test_checkpoint_round_trip_reproduces_predictions",
+   "to": "tests.test_training:tiny_model",
+   "call": "tiny_model"
+  },
+  {
+   "from": "tests.test_training:test_clip_gradients_bounds_the_total_norm",
+   "to": "src.train:clip_gradients_",
+   "call": "clip_gradients_"
+  },
+  {
+   "from": "tests.test_training:test_clip_gradients_bounds_the_total_norm",
+   "to": "tests.test_training:tiny_batch",
+   "call": "tiny_batch"
+  },
+  {
+   "from": "tests.test_training:test_clip_gradients_bounds_the_total_norm",
+   "to": "tests.test_training:tiny_model",
+   "call": "tiny_model"
+  },
+  {
+   "from": "tests.test_training:test_overfit_one_batch_is_reproducible_with_a_seed",
+   "to": "src.train:overfit_one_batch",
+   "call": "overfit_one_batch"
+  },
+  {
+   "from": "tests.test_training:test_overfit_one_batch_is_reproducible_with_a_seed",
+   "to": "tests.test_training:tiny_batch",
+   "call": "tiny_batch"
+  },
+  {
+   "from": "tests.test_training:test_overfit_one_batch_is_reproducible_with_a_seed",
+   "to": "tests.test_training:tiny_model",
+   "call": "tiny_model"
+  },
+  {
+   "from": "tests.test_training:test_overfit_one_batch_reduces_loss_substantially",
+   "to": "src.train:overfit_one_batch",
+   "call": "overfit_one_batch"
+  },
+  {
+   "from": "tests.test_training:test_overfit_one_batch_reduces_loss_substantially",
+   "to": "tests.test_training:tiny_batch",
+   "call": "tiny_batch"
+  },
+  {
+   "from": "tests.test_training:test_overfit_one_batch_reduces_loss_substantially",
+   "to": "tests.test_training:tiny_model",
+   "call": "tiny_model"
+  },
+  {
+   "from": "tests.test_training:test_train_model_reports_each_epoch_as_it_finishes",
+   "to": "src.train:train_model",
+   "call": "train_model"
+  },
+  {
+   "from": "tests.test_training:test_train_model_reports_each_epoch_as_it_finishes",
+   "to": "tests.test_training:small_config",
+   "call": "small_config"
+  },
+  {
+   "from": "tests.test_training:test_train_model_reports_each_epoch_as_it_finishes",
+   "to": "tests.test_training:write_processed",
+   "call": "write_processed"
+  },
+  {
+   "from": "tests.test_training:test_train_model_saves_best_checkpoint_and_tracks_history",
+   "to": "src.train:train_model",
+   "call": "train_model"
+  },
+  {
+   "from": "tests.test_training:test_training_continues_when_no_log_callback_is_given",
+   "to": "src.train:train_model",
+   "call": "train_model"
+  },
+  {
+   "from": "tests.test_training:test_training_continues_when_no_log_callback_is_given",
+   "to": "tests.test_training:small_config",
+   "call": "small_config"
+  },
+  {
+   "from": "tests.test_training:test_training_continues_when_no_log_callback_is_given",
+   "to": "tests.test_training:write_processed",
+   "call": "write_processed"
+  }
+ ]
+}
