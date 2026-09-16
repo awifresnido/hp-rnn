@@ -127,6 +127,56 @@ def test_checkpoint_records_metadata_for_standalone_evaluation(tmp_path) -> None
     assert loaded.model_config.vocab_size == VOCAB_SIZE
 
 
+def write_processed(dir_path, ids: torch.Tensor) -> None:
+    """Write the processed-data contract that training reads."""
+    torch.save(
+        {
+            "token_ids": ids,
+            "sequence_length": SEQUENCE_LENGTH,
+            "vocab_size": VOCAB_SIZE,
+        },
+        dir_path / "token_ids.pt",
+    )
+
+
+def small_config(tmp_path, run_name: str, epochs: int = 2) -> TrainConfig:
+    return TrainConfig(
+        processed_dir=tmp_path,
+        checkpoint_dir=tmp_path / "checkpoints",
+        run_name=run_name,
+        cell="rnn",
+        embed_size=16,
+        hidden_size=16,
+        num_layers=1,
+        sequence_length=SEQUENCE_LENGTH,
+        batch_size=8,
+        epochs=epochs,
+        learning_rate=0.01,
+        device="cpu",
+        seed=0,
+    )
+
+
+def test_train_model_reports_each_epoch_as_it_finishes(tmp_path) -> None:
+    ids = torch.randint(0, VOCAB_SIZE, (600,), generator=torch.Generator().manual_seed(1))
+    write_processed(tmp_path, ids)
+
+    seen: list = []
+    result = train_model(small_config(tmp_path, "streamed"), log=seen.append)
+
+    assert [record.epoch for record in seen] == [1, 2]
+    assert seen == result.history
+
+
+def test_training_continues_when_no_log_callback_is_given(tmp_path) -> None:
+    ids = torch.randint(0, VOCAB_SIZE, (600,), generator=torch.Generator().manual_seed(1))
+    write_processed(tmp_path, ids)
+
+    result = train_model(small_config(tmp_path, "silent"))
+
+    assert len(result.history) == 2
+
+
 def test_train_model_saves_best_checkpoint_and_tracks_history(tmp_path) -> None:
     ids = torch.randint(0, VOCAB_SIZE, (600,), generator=torch.Generator().manual_seed(1))
     # Mirror what src.data.prepare_dataset writes, so training reads the same contract.

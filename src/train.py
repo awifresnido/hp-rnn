@@ -11,7 +11,7 @@ import argparse
 import json
 import random
 import time
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -219,8 +219,16 @@ def load_processed(processed_dir: Path) -> tuple[list[int], int, int]:
     return payload["token_ids"].tolist(), int(payload["sequence_length"]), int(vocab_size)
 
 
-def train_model(config: TrainConfig) -> TrainResult:
-    """Run the one-batch check (optionally) and train, keeping the best epoch."""
+def train_model(
+    config: TrainConfig,
+    *,
+    log: Callable[[EpochRecord], None] | None = None,
+) -> TrainResult:
+    """Run the one-batch check (optionally) and train, keeping the best epoch.
+
+    ``log`` is called with each :class:`EpochRecord` as that epoch finishes, so a
+    long run reports progress instead of printing only at the very end.
+    """
     from src.data import build_dataloaders
 
     set_seed(config.seed)
@@ -269,14 +277,15 @@ def train_model(config: TrainConfig) -> TrainResult:
 
         train_loss = running_loss / running_positions
         val_loss = split_losses(model, {"val": loaders["val"]}, device=str(device))["val"]
-        result.history.append(
-            EpochRecord(
-                epoch=epoch,
-                train_loss=train_loss,
-                val_loss=val_loss,
-                seconds=time.perf_counter() - started,
-            )
+        record = EpochRecord(
+            epoch=epoch,
+            train_loss=train_loss,
+            val_loss=val_loss,
+            seconds=time.perf_counter() - started,
         )
+        result.history.append(record)
+        if log is not None:
+            log(record)
 
         if val_loss < result.best_val_loss:
             result.best_val_loss = val_loss
@@ -355,8 +364,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         seed=args.seed,
         overfit_only=args.overfit_one_batch,
     )
-    print(f"device: {resolve_device(config.device)}")
-    result = train_model(config)
+    print(f"device: {resolve_device(config.device)}", flush=True)
+
+    def report(record: EpochRecord) -> None:
+        """Print each epoch as it lands, so a detached run shows progress."""
+        print(
+            f"epoch {record.epoch:>3}/{config.epochs}  "
+            f"train {record.train_loss:.4f}  "
+            f"val {record.val_loss:.4f}  "
+            f"{record.seconds:6.1f}s",
+            flush=True,
+        )
+
+    print(f"run: {config.run_name} ({config.cell})", flush=True)
+    result = train_model(config, log=report)
 
     if config.overfit_only:
         history = result.overfit_history
