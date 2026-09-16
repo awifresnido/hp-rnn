@@ -50,7 +50,54 @@ lawfully obtained EPUB
 
 The EPUB is parsed directly. Converting it to Markdown first is unnecessary and can introduce headings, links, and formatting artifacts into the training corpus.
 
-## Planned command interface
+## Results
+
+Corpus: the seven-book omnibus, **1,385,232 tokens** after cleaning. Split by whole
+books — train = books 1-5 (917,347), validation = book 6 (217,412), test = book 7
+(250,473) — so test is a book the model never saw. Every run: embed 256, hidden 512,
+2 layers, context 64, batch 128, lr 1e-3, gradient clip 1.0, 15 epochs, seed 0.
+
+| Model | Parameters | Val PPL | Test PPL | Training time | Best epoch |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| vanilla RNN | 14,761,552 | 629.48 | 846.40 | 70.8 min | 1 |
+| GRU | 16,600,656 | 408.09 | 545.82 | 72.9 min | 1 |
+| LSTM | 17,520,208 | 149.22 | 189.88 | 74.0 min | 1 |
+| LSTM + dropout 0.4 | 17,520,208 | 131.38 | 160.22 | 74.5 min | 1 |
+| LSTM + dropout, embed 128 / hidden 256 | **7,851,600** | **101.17** | **118.25** | 54.6 min | 1 |
+
+For reference, uniform prediction over an 18,000-word vocabulary scores
+`ln(18000) = 9.798` — perplexity 18,000. Every model here is far below that, so
+all learned real structure; none is outputting noise.
+
+**The result that matters most is the `Best epoch` column: every model peaked after
+one epoch.** Training longer raised validation loss on every architecture, because
+these models carry ~9-19 parameters per training token and so store the training
+text instead of learning the language. The best-validation checkpoint rule is what
+keeps these numbers meaningful. The ranking is identical on validation and test
+sets (LSTM < GRU < RNN, with dropout and reduced capacity both improving on the
+plain LSTM), so the selection procedure did not mislead.
+
+Limitations: one seed, so differences smaller than run-to-run noise are not
+resolved; the corpus is a single author's series, and the best checkpoints come
+from the first epoch, so these are "one epoch of learning" models. Generated text
+is locally grammatical but globally incoherent, and can echo source phrasing — do
+not publish long generations.
+
+Regenerate the table from recorded runs:
+
+```bash
+python -m src.compare --results-dir results/book --checkpoint-dir checkpoints/book \
+  --processed-dir data/processed-book --evaluate-test --markdown results/book/comparison.md
+```
+
+The dependency graph of the repository (parsed from the source, not hand-drawn) is
+in `docs/dependency-graph.html` with a text version in `docs/architecture.md`:
+
+```bash
+python scripts/depgraph.py && python scripts/render_architecture.py
+```
+
+## Command interface
 
 ```bash
 # 1. Install dependencies
@@ -93,7 +140,9 @@ python -m src.generate \
   --top-k 20
 ```
 
-These commands define the intended interface. Implementation proceeds in tested stages; commands are not claimed to work until their stage is committed.
+Every stage is implemented, tested, and committed; the commands above were each run
+on the DGX (ai-n003, A100) against the seven-book corpus, and the numbers in
+[Results](#results) come from those runs.
 
 ## Experiment order
 
