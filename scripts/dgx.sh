@@ -32,6 +32,7 @@ if [ "$DO_SYNC" = "1" ]; then
     if tar czf - -C "$PROJECT_ROOT" \
         --exclude=.git --exclude=.venv --exclude=__pycache__ \
         --exclude=.pytest_cache --exclude=.ruff_cache --exclude=logs \
+        --exclude=data --exclude=checkpoints --exclude=results \
         . | ssh "${SSH_OPTS[@]}" "$DGX_HOST" \
         "mkdir -p \$HOME/$DGX_DIR && tar xzf - -C \$HOME/$DGX_DIR"; then
       break
